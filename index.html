@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="sv" data-plan-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planlösning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Narrow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #eceef0; --panel: #f7f8f9; --ink: #1c2530; --muted: #5b6672; --rule: #cfd4da;
+  --wall: #26303c; --grid: rgba(38,48,60,.07); --accent: #2d5ca6; --danger: #c13f2b;
+  --room-s: 42%; --room-l: 89%; --gap: #eceef0; --upper: .55;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
+    --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
+    --room-s: 22%; --room-l: 23%; --gap: #161a20;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
+  --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
+  --room-s: 22%; --room-l: 23%; --gap: #161a20;
+  color-scheme: dark;
+}
+:root[data-plan-theme="light"] {
+  --paper: #eceef0; --panel: #f7f8f9; --ink: #1c2530; --muted: #5b6672; --rule: #cfd4da;
+  --wall: #26303c; --grid: rgba(38,48,60,.07); --accent: #2d5ca6; --danger: #c13f2b;
+  --room-s: 42%; --room-l: 89%; --gap: #eceef0;
+  color-scheme: light;
+}
+:root[data-plan-theme="dark"] {
+  --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
+  --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
+  --room-s: 22%; --room-l: 23%; --gap: #161a20;
+  color-scheme: dark;
+}
+:root { --mobel: #1f3f8f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --mobel: #8db0ee; } }
+:root[data-theme="dark"] { --mobel: #8db0ee; }
+:root[data-plan-theme="light"] { --mobel: #1f3f8f; }
+:root[data-plan-theme="dark"] { --mobel: #8db0ee; }
+.furn.mob, .furnline.mob { stroke: var(--mobel); }
+.furn.mob { stroke-width: 1.3; }
+.furn.dash { fill: none; stroke-dasharray: 8 5; }
+.furnline.dash { stroke-dasharray: 6 4; }
+.leaf.mob, .arc.mob { stroke: var(--mobel); }
+.flabel.mob { fill: var(--mobel); }
+*, *::before, *::after { box-sizing: inherit; }
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  height: 100%; margin: 0; background: var(--paper); color: var(--ink);
+  font: 15px/1.45 "Archivo", "Helvetica Neue", Arial, sans-serif;
+}
+.app { height: 100%; display: grid; grid-template-columns: 290px 1fr; }
+.side {
+  background: var(--panel); border-right: 1px solid var(--rule);
+  overflow-y: auto; padding: 22px 20px 28px;
+}
+h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -.01em; margin: 0 0 22px; }
+h2 { font-size: .95rem; font-weight: 600; margin: 24px 0 8px; color: var(--ink); }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree ul { margin-left: 13px; padding-left: 12px; border-left: 1px solid var(--rule); }
+.tree li { margin: 2px 0; }
+.opt { display: flex; align-items: baseline; gap: 9px; padding: 4px 0; cursor: pointer; }
+.opt input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; transform: translateY(2px); flex: none; }
+.opt.off { color: var(--muted); }
+.opt small { color: var(--muted); font-size: .8rem; }
+.floor > .opt { font-weight: 600; }
+#notes { list-style: none; padding: 0; margin: 0; font-size: .86rem; }
+#notes li { padding: 6px 0; border-top: 1px solid var(--rule); color: var(--muted); }
+#notes li.warn { color: var(--danger); }
+#notes li.err { color: var(--danger); font-weight: 600; }
+.stage { position: relative; overflow: hidden; touch-action: none; }
+svg#plan { display: block; width: 100%; height: 100%; cursor: grab; user-select: none; }
+svg#plan.drag { cursor: grabbing; }
+.toolbar { position: absolute; top: 14px; right: 14px; display: flex; gap: 8px; z-index: 2; }
+button {
+  font: inherit; font-size: .9rem; font-weight: 500; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 7px 13px; cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.coords {
+  position: absolute; left: 14px; bottom: 12px; font: 500 .82rem "Archivo Narrow", "Arial Narrow", sans-serif;
+  color: var(--muted); background: var(--panel); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--rule);
+}
+.editor {
+  position: absolute; inset: 0 0 0 auto; width: min(560px, 100%); background: var(--panel);
+  border-left: 1px solid var(--rule); display: flex; flex-direction: column; z-index: 3;
+  padding: 16px 16px 14px;
+}
+.toast {
+  position: absolute; right: 14px; bottom: 12px; font-size: .85rem; color: var(--panel);
+  background: var(--ink); padding: 5px 10px; border-radius: 4px; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.toast.show { opacity: 1; }
+.editor[hidden] { display: none; }
+.editor header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.editor header h2 { margin: 0; font-size: 1.05rem; }
+.editor textarea {
+  flex: 1; width: 100%; resize: none; background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 6px; padding: 12px;
+  font: 13px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; tab-size: 2;
+}
+.editor .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.editor .row .hint { color: var(--muted); font-size: .82rem; margin-left: auto; }
+/* plan */
+.room { fill: var(--paper); }
+.themepick { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; }
+.themepick select { font: inherit; font-size: .9rem; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 5px 8px; }
+.walls { fill: var(--wall); }
+.gapfill { fill: var(--gap); }
+.jamb, .leaf { stroke: var(--wall); fill: none; stroke-linecap: round; }
+.arc { stroke: var(--wall); fill: none; stroke-width: 1; }
+.overlap { fill: var(--danger); fill-opacity: .45; stroke: var(--danger); stroke-width: 1.5; }
+.rname { font: 600 15px "Archivo", sans-serif; fill: var(--ink); text-anchor: middle; }
+.rarea { font: 400 12px "Archivo", sans-serif; fill: var(--muted); text-anchor: middle; }
+.wlabel { font: 400 9px "Archivo Narrow", "Arial Narrow", sans-serif; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
+.furn { fill: var(--paper); stroke: var(--wall); stroke-width: 1; }
+.furnline { fill: none; stroke: var(--wall); stroke-width: .8; }
+.flabel { font: 500 11px "Archivo", sans-serif; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
+.gridline { stroke: var(--grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.upper { opacity: var(--upper); }
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 62% minmax(0, 1fr); }
+  .stage { grid-row: 1; }
+  .side { grid-row: 2; border-right: 0; border-top: 1px solid var(--rule); padding: 14px 16px 24px; }
+  h1 { display: none; }
+  h2 { margin-top: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <h1>Planlösning</h1>
+    <h2>Lager</h2>
+    <ul class="tree" id="layers"></ul>
+    <h2>Visa</h2>
+    <div id="filters"></div>
+    <label class="themepick">Utseende
+      <select id="theme"><option value="light">Ljust</option><option value="dark">Mörkt</option><option value="system">Som systemet</option></select>
+    </label>
+    <h2>Meddelanden</h2>
+    <ul id="notes"></ul>
+  </aside>
+  <main class="stage" id="stage">
+    <div class="toolbar">
+      <button id="copyImg" type="button">Kopiera bild</button>
+      <button id="saveImg" type="button" hidden>Spara PNG</button>
+      <button id="fit" type="button">Anpassa vy</button>
+      <button id="editBtn" type="button">Redigera plan</button>
+    </div>
+    <svg id="plan" xmlns="http://www.w3.org/2000/svg" aria-label="Planritning"></svg>
+    <div class="coords" id="coords">x –, y –</div>
+    <div class="toast" id="toast" role="status"></div>
+    <section class="editor" id="editor" hidden aria-label="Redigera plan">
+      <header><h2>Plan</h2><button id="closeEd" type="button">Stäng</button></header>
+      <textarea id="src" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="apply" class="primary" type="button">Rita om</button>
+        <button id="copy" type="button">Kopiera text</button>
+        <button id="reset" type="button">Återställ till inbyggd plan</button>
+        <span class="hint" id="edHint">Ctrl + Enter ritar om</span>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="text/plain" id="plandata"># Planlösning. Mått i cm, innermått.
+# Rum beskrivs medurs från övre vänstra hörnet, första väggen åt höger (öster).
+# H/V = 90° höger/vänster, H/2 = 45°, H30 = 30°. ? efter ett mått = osäkert.
+#
+# lager X på Y             X bygger på Y (flera föräldrar: på A, B – ett sådant lager har ingen kryssruta utan är på när alla föräldrar är på). Lager utan ”på” är en våning.
+# lager X på Y, alternativ M   bara ett lager i gruppen M kan vara på åt gången.
+# rum X: 380 H 420 …       rum; en ny definition i ett senare lager ersätter den gamla.
+# A.i mot B.j, start s     placering: A.i slutar s cm efter B.j:s start.
+# A.i mot B.j, slut s      placering: A.i börjar s cm före B.j:s slut.
+# kontroll A.i mot B.j …   kontrollerar läget utan att placera.
+# X.k tjocklek t           väggtjocklek, standard 10. ? = okänd.
+# X.k = 270                ändrar en väggs längd.
+# dörr D: X.k start 30, 80, in, gångjärn start     (start/slut = mätt från väggens start/slut)
+# öppning Ö: X.k slut 0, 200
+# fönster F: X.k start 20, 150
+# inredning I: X.k start 0, 60 x 60, typ       typ: kyl, frys, bänk, spis, diskmaskin, diskho, toalett, handfat, dusch, badkar, tvättmaskin, torktumlare, trappa, garderob, takfönster
+#                ”mitt” i stället för ”start 20” centrerar på väggen (”mitt 10” = 10 cm förbi mitten); gäller även dörrar och fönster
+#                takfönster ritas streckade och visas med Dörrar, fönster och öppningar
+#                ”, pil slut” sist på en trappa: pil mot väggens slut (även pil start, pil från väggen, pil mot väggen)
+#                inredningens kanter numreras medurs (1 = mot väggen), så dörrar kan sitta på dem
+# skjutdörr S: X.k start 0, 90
+# möbel M: X.k start 20, 120 x 200, säng      som inredning, men blå och visas med Möbler under Visa; varianter som egna lager
+#                även soffa (”, schäslong slut 200 x 90”), bäddsoffa (”, utfälld 200”), skrivbord (”, stol”), elpiano
+#                ”, inredning” sist på en dörr eller skjutdörr: visas med Inredning (dörrar på inredning gör det alltid)
+#                ”, ut 30” sist flyttar inredningen 30 cm ut från väggen (genom en öppning)
+# byt namn X till Y        byter namn på ett rum; dörrar, fönster och placeringar följer med
+# ta bort D
+
+lager Undervåning
+
+  rum MasterBedroom: 380 H 420 H 380 H 420
+
+  rum Sovrum2: 350 H 320 H 350 H 320
+    Sovrum2.4 mot MasterBedroom.2, start 0
+    MasterBedroom.2 tjocklek 10
+
+  rum Sovrum1: 260 H 290 H 260 H 290
+    Sovrum1.1 mot MasterBedroom.3, slut 0
+    Sovrum1.1 tjocklek 10
+
+  rum Matsal: 415 H 440 H 415 H 440
+    Matsal.4 mot Sovrum2.2, start 0
+    Sovrum2.2 tjocklek 10
+
+  rum Kök: 415 H 230 H 415 H 230
+    Kök.1 mot Matsal.3, start 0
+    Matsal.3 tjocklek 10
+
+  rum WC1: 165 H 120 H53.13 125? H36.87 65 H 195
+    WC1.1 mot Sovrum1.3, slut 0
+    Sovrum1.3 tjocklek 10
+
+  rum Hall: 95 V 300 H 110 H 70 V 75 V 170 H 285 H 290 H 195 V 100 H 180 V 25 V 25 H 120 H 120 H 15 V 95 H 120
+    Hall.2 mot Sovrum1.2, start 0
+    kontroll Hall.18 mot WC1.2, start 0
+
+  rum WC2: 145 H 140 H 145 H 140
+    WC2.4 mot Hall.10, start 10
+
+  rum Garderob1: 140 H 120 H 140 H 120
+    Garderob1.4 mot Hall.14, start 0
+    Garderob1.4 tjocklek 15
+
+  rum GN: 55 H 160 H 55 H 160
+    GN.1 mot Sovrum2.3, slut 0
+
+  # Öppningar
+  öppning ÖppningMatsalKök: Kök.1 start 240, 175
+  öppning ÖppningHallMatsal: Matsal.4 start 10, 90
+  öppning ÖppningHallKök: Kök.4 start 70, 100
+  öppning ÖppningGarderob1: Garderob1.4 start 50, 60
+
+  # Fönster
+  fönster FönsterMasterBedroom1: MasterBedroom.1 start 20, 150
+  fönster FönsterMasterBedroom4: MasterBedroom.4 slut 20, 150
+  fönster FönsterSovrum2: Sovrum2.1 start 110, 150
+  fönster FönsterMatsal1: Matsal.1 slut 20, 150
+  fönster FönsterMatsal2: Matsal.2 start 20, 150
+  fönster FönsterKök: Kök.2 slut 60, 150
+  fönster FönsterSovrum1: Sovrum1.4 slut 80, 150
+  fönster FönsterWC1: WC1.5 slut 20, 75
+
+  # Dörrar
+  dörr DörrMasterBedroom: MasterBedroom.3 start 10, 90, in, gångjärn start
+  dörr DörrSovrum1: Sovrum1.2 start 110, 80, in, gångjärn start
+  dörr DörrSovrum2: Sovrum2.3 start 10, 90, in, gångjärn start
+  dörr DörrWC2: WC2.4 start 55, 80, ut, gångjärn start
+  dörr DörrWC1: WC1.2 slut 5, 90, ut, gångjärn slut
+
+  # Inredning (bredd längs väggen x djup in i rummet)
+  inredning KökKyl: Kök.1 start 0, 60 x 60, kyl
+  inredning KökFrys: Kök.1 start 60, 60 x 60, frys
+  inredning KökBänk1: Kök.1 start 120, 120 x 60, bänk
+  inredning KökBänk2: Kök.3 start 0, 120 x 60, bänk
+  inredning KökSpis: Kök.3 start 120, 60 x 60, spis
+  inredning KökBänk3: Kök.3 start 180, 40 x 60, bänk
+  inredning KökDM: Kök.3 start 220, 60 x 60, diskmaskin
+  inredning KökDiskho: Kök.3 start 280, 80 x 60, diskho
+  inredning KökBänk4: Kök.3 start 360, 55 x 60, bänk
+
+  inredning WC1Toalett: WC1.5 slut 20, 40 x 65, toalett
+  inredning WC1Handfat: WC1.1 slut 20, 60 x 40, handfat
+  inredning WC1Dusch: WC1.5 start 0, 60 x 60, dusch
+
+  inredning WC2Toalett: WC2.3 slut 20, 40 x 65, toalett
+  inredning WC2Handfat: WC2.1 start 40, 60 x 40, handfat
+  inredning WC2Dusch: WC2.3 start 0, 60 x 60, dusch
+
+  inredning Trappa: Matsal.4 slut 90, 250 x 90, trappa, upp start
+
+  # Inbyggda garderober
+  skjutdörr SkjutdörrGN: GN.4 slut 0, 90, inredning
+  dörr DörrGN: Hall.4 slut 10, 60, in, gångjärn slut, inredning
+  inredning GarderobSovrum1: Sovrum1.1 slut 50, 60 x 60, garderob
+  dörr DörrGarderobSovrum1: GarderobSovrum1.3 start 0, 60, ut, gångjärn start
+  inredning GarderobHall1: Sovrum1.1 slut -10, 60 x 60, garderob         # 10 cm över väggen mot Hall
+  dörr DörrGarderobHall1: GarderobHall1.2 start 0, 60, ut, gångjärn slut
+  dörr Ytterdörr: Hall.15 start 0, 100, ut, gångjärn start
+  dörr DörrGarderob1: Garderob1.3 start 0, 100, ut, gångjärn start      # gammal igenbommad ytterdörr
+
+  # Möbler (visas med Möbler under Visa)
+  möbel SängMasterBedroom: MasterBedroom.1 start 40, 120 x 200, säng
+  möbel SängSovrum2: Sovrum2.4 start 100, 120 x 200, säng
+  möbel SängSovrum1: Sovrum1.3 slut 10, 120 x 200, säng
+
+
+lager WC2 på Undervåning
+  Hall.9 = 295
+  Hall.11 = 80
+  rum WC2: 245 H 140 H 145 H 50 V 100 H 90
+    WC2.6 mot Hall.10, start 10
+  dörr DörrWC2: WC2.1 slut 50, 80, ut, gångjärn slut      # öppnad dörr skymmer öppningen mot Kök
+  inredning WC2Toalett: WC2.3 slut 20, 40 x 65, toalett
+  inredning WC2Handfat: WC2.2 start 10, 120 x 40, handfat
+  inredning WC2Dusch: WC2.6 start 5, 80 x 80, dusch
+
+
+lager Sovrum3 på Undervåning
+  MasterBedroom.2 = 200
+  MasterBedroom.4 = 200
+  rum Sovrum3: 260 H 210 H 260 H 210
+    Sovrum3.1 mot MasterBedroom.3, slut 0
+  Sovrum1.1 mot Sovrum3.3, slut 0
+  Hall.2 = 520
+  Hall.4 = 290
+  Hall.2 mot Sovrum3.2, start 0
+  dörr DörrSovrum3: Sovrum3.2 start 10, 80, in, gångjärn start
+  möbel SängSovrum3: Sovrum3.3 slut 10, 120 x 200, säng
+  möbel SängMasterBedroom: MasterBedroom.4 slut 40, 120 x 200, säng      # vriden, huvudänden mot .4
+
+
+lager WC1 på Undervåning
+  ta bort WC1Toalett
+  ta bort WC1Handfat
+  ta bort WC1Dusch
+  byt namn WC1 till Garderob2
+
+
+lager Kök på Undervåning
+  öppning ÖppningMatsalKök: Kök.1 start 120, 295
+  inredning KökBänk1: Kök.1 start 120, 120 x 80, bänk, ut 20      # bardisk som sticker ut i Matsal
+
+
+lager FastGarderobNere på Undervåning
+  ta bort GarderobSovrum1
+  ta bort DörrGarderobSovrum1
+  ta bort GarderobHall1
+  ta bort DörrGarderobHall1
+
+
+
+# ---------------------------------------------------------------------------
+# Ovanvåningen är uppmätt vriden 180° (start uppe till vänster i den vridna vyn).
+# Måtten står som de mättes; hela våningen vrids och flyttas när den ritas.
+# förskjutning X Y är i cm med y nedåt, som koordinaterna i hörnet.
+lager Ovanvåning, vridning 180, förskjutning 890 1005      # Vardagsrum.9 i linje med Matsal.1; 10 cm åt höger mot schaktet nere
+
+  rum Badrum: 340 H 240 H 140 H 95 V 50 V 60 H 150 H 205
+
+  # Fasta regler: Vardagsrum.14 (165, yttervägg) har samma x som Badrum.8; Vardagsrum.2 och .8 har samma x.
+  # Gamla vägg 11–12 (200, 165) är egentligen 145 H 115 V 55 H 165 (nya 11–14).
+  # Diagonalen (15) går 150 i sidled (Sovrum4: 330 − 180) och 122,3 i höjdled så att vägg 6 blir 610:
+  # 193,5 lång, 50,8° från lodlinjen. (Förut: 230 lång, 40,7°.)
+  # Vägg 9 = 255 och vägg 17 = 65. Vägg 18 = 152,7 så att Sovrum4 hamnar 10 cm under Badrum.
+  # Vägg 6 (610?) tar y-felet, vägg 19 (150?) x-felet.
+  rum Vardagsrum: 90 H 140 V 90 H 65 V 110 H 610? H 200 V 190 H 255 H 190 V 145 H 115 V 55 H 165 H50.81 193.5 V50.81 10 H 65 V 152.7 H 150? V 250
+    Vardagsrum.20 mot Badrum.2, start 0
+    Vardagsrum.20 tjocklek 10
+
+  rum GU: 110 H 60 H 110 H 60          # GU.2 i linje med Vardagsrum.6
+    GU.4 mot Vardagsrum.4, start 0
+    GU.4 tjocklek 0
+    GU.3 tjocklek 5
+
+  # Diagonalen är samma vägg som Vardagsrum.15. Vägg 2 = 190, vägg 4 = 180, vägg 5 = 312,3 (uträknad).
+  rum Sovrum4: 330 H 190 H50.81 193.5 H39.19 180 H 312.3
+    Sovrum4.3 mot Vardagsrum.15, start 0
+    Sovrum4.3 tjocklek 10
+    kontroll Sovrum4.1 mot Badrum.7, start 0
+
+  inredning TrappaUppe: Vardagsrum.11 slut 10, 90 x 280, trappa, pil från väggen      # 10 cm från Vardagsrum.12, rakt över trappan nere
+
+  # Fönster
+  fönster FönsterV9: Vardagsrum.9 start 10, 235
+  fönster FönsterS5: Sovrum4.5 mitt, 180
+
+  # Takfönster: 20 cm från väggen, 160 djupa på ritningen (200 på det lutande taket).
+  inredning TakfönsterB8: Badrum.8 start 100, 100 x 160, takfönster, ut 0
+  inredning TakfönsterV6a: Vardagsrum.6 start 100, 90 x 160, takfönster, ut -20
+  inredning TakfönsterV6b: Vardagsrum.6 start 220, 90 x 160, takfönster, ut -20
+
+  # Dörrar
+  dörr DörrSovrum4: Sovrum4.3 start 10, 80, in, gångjärn start      # i den sneda väggen
+  dörr DörrBadrum: Badrum.2 start 50, 90, ut, gångjärn start
+  dörr YtterdörrUppe: Vardagsrum.2 start 20, 90, ut, gångjärn start
+
+  # Badrum
+  inredning BToalett: Badrum.1 slut 20, 40 x 65, toalett
+  inredning BHandfat: Badrum.1 slut 80, 60 x 40, handfat
+  inredning BBadkar: Badrum.8 mitt, 180 x 70, badkar
+  inredning BTM: Badrum.3 start 0, 60 x 60, tvättmaskin
+  inredning BTT: Badrum.3 start 60, 60 x 60, torktumlare
+
+  # Möbler (visas med Möbler under Visa)
+  möbel SängSovrum4: Sovrum4.1 start 40, 160 x 200, säng
+
+  möbel GarderobS2a: Sovrum4.2 start 0, 60 x 60, garderob
+  möbel GarderobS2b: Sovrum4.2 start 60, 60 x 60, garderob
+  skjutdörr SkjutdörrGarderobS2a: GarderobS2a.3 start 0, 60
+  skjutdörr SkjutdörrGarderobS2b: GarderobS2b.3 start 0, 60
+
+  möbel GarderobS4a: Sovrum4.4 slut 0, 60 x 60, garderob
+  möbel GarderobS4b: Sovrum4.4 slut 60, 60 x 60, garderob
+  möbel GarderobS4c: Sovrum4.4 slut 120, 60 x 60, garderob
+  skjutdörr SkjutdörrGarderobS4a: GarderobS4a.3 start 0, 60
+  skjutdörr SkjutdörrGarderobS4b: GarderobS4b.3 start 0, 60
+  skjutdörr SkjutdörrGarderobS4c: GarderobS4c.3 start 0, 60
+
+  möbel Bäddsoffa: Vardagsrum.6 start 30, 140 x 100, bäddsoffa, utfälld 200, ut -10
+  möbel SoffaSchäslong: Vardagsrum.6 start 220, 260 x 90, soffa, schäslong slut 200 x 90, ut -10
+  möbel Skrivbord: Vardagsrum.9 start 50, 160 x 80, skrivbord, stol, ut -10      # under fönstret, 50 cm från V.8
+  möbel Elpiano: Vardagsrum.8 start 0, 130 x 30, elpiano
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
+<script>
+// ---------- Planmotor: tolkning, lager, geometri ----------
+const STD = 10, TOL = 0.5, FACE = 40;
+const isFurn = o => o.kind === "inredning" || o.kind === "möbel";
+const NM = "[^\\s.:,]+";
+const RX = {
+  layer: new RegExp(`^lager\\s+(${NM})(.*)$`, "u"),
+  room: new RegExp(`^rum\\s+(${NM})\\s*:\\s*(.+)$`, "u"),
+  rel: new RegExp(`^(kontroll\\s+)?(${NM})\\.(\\d+)\\s+mot\\s+(${NM})\\.(\\d+)(?:\\s*,\\s*(start|slut)\\s+(-?[\\d.]+))?$`, "u"),
+  thick: new RegExp(`^(${NM})\\.(\\d+)\\s+tjocklek\\s+(\\S+)$`, "u"),
+  len: new RegExp(`^(${NM})\\.(\\d+)\\s*=\\s*([\\d.]+)(\\?)?$`, "u"),
+  door: new RegExp(`^dörr\\s+(${NM})\\s*:\\s*(${NM})\\.(\\d+)\\s+(start|slut|mitt)(?:\\s+(-?[\\d.]+))?\\s*,\\s*([\\d.]+)\\s*,\\s*(in|ut)\\s*,\\s*gångjärn\\s+(start|slut)(\\s*,\\s*inredning)?$`, "u"),
+  opening: new RegExp(`^(öppning|fönster|skjutdörr)\\s+(${NM})\\s*:\\s*(${NM})\\.(\\d+)\\s+(start|slut|mitt)(?:\\s+(-?[\\d.]+))?\\s*,\\s*([\\d.]+)(\\s*,\\s*inredning)?$`, "u"),
+  remove: new RegExp(`^ta\\s+bort\\s+(${NM})$`, "u"),
+  furn: new RegExp(`^(inredning|möbel)\\s+(${NM})\\s*:\\s*(${NM})\\.(\\d+)\\s+(start|slut|mitt)(?:\\s+(-?[\\d.]+))?\\s*,\\s*([\\d.]+)\\s*[x×]\\s*([\\d.]+)\\s*,\\s*([^\\s,]+)((?:\\s*,[^,]+)*)$`, "u"),
+  rename: new RegExp(`^byt\\s+namn\\s+(${NM})\\s+till\\s+(${NM})$`, "u"),
+  turn: /^([HV])(?:\/(\d+)|([\d.]+))?$/,
+};
+
+function furnOpts(s) {                           // tillägg efter typen: ”ut 20”, ”upp slut”
+  const o = { out: 0, up: null };
+  for (const part of (s || "").split(",").map(x => x.trim()).filter(Boolean)) {
+    let m;
+    if ((m = part.match(/^ut\s+(-?[\d.]+)$/u))) o.out = +m[1];
+    else if ((m = part.match(/^(?:upp|pil)\s+(start|slut|från väggen|mot väggen)$/u))) o.up = m[1];
+    else if (part === "stol") o.chair = true;
+    else if ((m = part.match(/^utfälld\s+([\d.]+)$/u))) o.bed = +m[1];
+    else if ((m = part.match(/^schäslong\s+(start|slut)\s+([\d.]+)\s*[x×]\s*([\d.]+)$/u))) o.chaise = { side: m[1], depth: +m[2], width: +m[3] };
+    else throw new Error(`okänt tillägg ”${part}”`);
+  }
+  return o;
+}
+
+function parseSpec(spec) {
+  const toks = spec.trim().split(/\s+/), L = [], unc = [], turns = [];
+  toks.forEach((t, k) => {
+    if (k % 2 === 0) {
+      const v = parseFloat(t.replace("?", ""));
+      if (isNaN(v)) throw new Error(`”${t}” är inget mått`);
+      L.push(v); unc.push(t.endsWith("?"));
+    } else {
+      const m = t.match(RX.turn);
+      if (!m) throw new Error(`”${t}” är ingen sväng`);
+      const deg = m[2] ? 90 / +m[2] : m[3] ? +m[3] : 90;
+      turns.push(m[1] === "H" ? -deg : deg);
+    }
+  });
+  return { L, unc, turns };
+}
+
+function parsePlan(text) {
+  const layers = [], errors = [];
+  let cur = null;
+  text.split(/\r?\n/).forEach((raw, idx) => {
+    const line = raw.split("#")[0].trim(), ln = idx + 1;
+    if (!line) return;
+    let m;
+    try {
+      if ((m = line.match(RX.layer))) {
+        let rest = m[2].trim(), group = null, parents = [];
+        const g = rest.match(/,?\s*alternativ\s+(\S+)\s*$/u);
+        if (g) { group = g[1]; rest = rest.slice(0, g.index).trim(); }
+        let rot = 0, off = null;
+        const vr = rest.match(/,?\s*vridning\s+(-?[\d.]+)/u);
+        if (vr) { rot = +vr[1]; rest = (rest.slice(0, vr.index) + rest.slice(vr.index + vr[0].length)).trim(); }
+        const fo = rest.match(/,?\s*förskjutning\s+(-?[\d.]+)\s+(-?[\d.]+)/u);
+        if (fo) { off = [+fo[1], -fo[2]]; rest = (rest.slice(0, fo.index) + rest.slice(fo.index + fo[0].length)).trim(); }
+        if (rest.startsWith("på")) parents = rest.slice(2).split(",").map(s => s.trim()).filter(Boolean);
+        else if (rest) throw new Error("väntade ”på …” efter lagrets namn");
+        for (const p of parents) if (!layers.find(l => l.name === p)) throw new Error(`lagret ”${p}” är inte definierat ovanför`);
+        if (layers.find(l => l.name === m[1])) throw new Error(`lagret ”${m[1]}” finns redan`);
+        cur = { name: m[1], parents, group, rot, off, ops: [], line: ln };
+        layers.push(cur);
+        return;
+      }
+      if (!cur) throw new Error("raden står före första ”lager”");
+      const op = (o) => cur.ops.push({ ...o, line: ln });
+      if ((m = line.match(RX.room))) op({ t: "room", name: m[1], spec: parseSpec(m[2]) });
+      else if ((m = line.match(RX.door))) op({ t: "obj", kind: "dörr", name: m[1], room: m[2], k: +m[3], from: m[4], dist: +(m[5] || 0), width: +m[6], swing: m[7], hinge: m[8], cat: m[9] ? "inredning" : null });
+      else if ((m = line.match(RX.opening))) op({ t: "obj", kind: m[1], name: m[2], room: m[3], k: +m[4], from: m[5], dist: +(m[6] || 0), width: +m[7], cat: m[8] ? "inredning" : null });
+      else if ((m = line.match(RX.furn))) op({ t: "obj", kind: m[1], name: m[2], room: m[3], k: +m[4], from: m[5], dist: +(m[6] || 0), width: +m[7], depth: +m[8], typ: m[9].toLowerCase(), ...furnOpts(m[10]) });
+      else if ((m = line.match(RX.rename))) op({ t: "rename", from: m[1], to: m[2] });
+      else if ((m = line.match(RX.rel))) op({ t: "rel", check: !!m[1], a: m[2], i: +m[3], b: m[4], j: +m[5], mode: m[6] || "start", s: +(m[7] || 0) });
+      else if ((m = line.match(RX.thick))) op({ t: "thick", room: m[1], k: +m[2], val: m[3] === "?" ? null : +m[3] });
+      else if ((m = line.match(RX.len))) op({ t: "len", room: m[1], k: +m[2], val: +m[3], unc: !!m[4] });
+      else if ((m = line.match(RX.remove))) op({ t: "remove", name: m[1] });
+      else throw new Error("förstår inte raden");
+    } catch (e) { errors.push(`Rad ${ln}: ${e.message}`); }
+  });
+  return { layers, errors };
+}
+
+// ---------- lager ----------
+function ancestors(plan, name, acc = new Set()) {
+  const l = plan.layers.find(x => x.name === name);
+  if (l) for (const p of l.parents) { acc.add(p); ancestors(plan, p, acc); }
+  return acc;
+}
+function floorOf(plan, name) {
+  const l = plan.layers.find(x => x.name === name);
+  return l.parents.length ? floorOf(plan, l.parents[0]) : l.name;
+}
+function activeSet(plan, checked) {
+  const act = new Set();
+  for (const l of plan.layers)                      // definitionsordning = föräldrar först
+    if ((l.parents.length > 1 || checked.has(l.name)) && l.parents.every(p => act.has(p))) act.add(l.name);
+  return act;
+}
+
+// ---------- vektorer ----------
+const add = (a, b) => [a[0] + b[0], a[1] + b[1]], sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const mul = (a, s) => [a[0] * s, a[1] * s], dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+const len = a => Math.hypot(a[0], a[1]), unit = a => mul(a, 1 / len(a));
+const rot = (p, deg) => { const c = Math.cos(deg * Math.PI / 180), s = Math.sin(deg * Math.PI / 180); return [c * p[0] - s * p[1], s * p[0] + c * p[1]]; };
+const normal = d => [-d[1], d[0]];                 // vänster om riktningen = utåt (medurs rum)
+
+function pinv2(a, b, c) {                          // symmetrisk 2x2 [[a,b],[b,c]]
+  const tr = a + c, disc = Math.sqrt(((a - c) / 2) ** 2 + b * b);
+  const l1 = tr / 2 + disc, l2 = tr / 2 - disc;
+  let v1 = Math.abs(b) > 1e-12 ? unit([l1 - c, b]) : (a >= c ? [1, 0] : [0, 1]);
+  const v2 = [-v1[1], v1[0]], eps = 1e-9 * Math.max(Math.abs(l1), 1), M = [[0, 0], [0, 0]];
+  for (const [l, v] of [[l1, v1], [l2, v2]]) if (l > eps)
+    for (let r = 0; r < 2; r++) for (let s = 0; s < 2; s++) M[r][s] += v[r] * v[s] / l;
+  return M;
+}
+function adjust(L, dirs, e, idx, weighted) {      // minsta (viktade) ändring av L[idx] så att felet e försvinner
+  let a = 0, b = 0, c = 0;
+  const w = i => weighted ? L[i] : 1;
+  for (const i of idx) { const [x, y] = dirs[i]; a += w(i) * x * x; b += w(i) * x * y; c += w(i) * y * y; }
+  const P = pinv2(a, b, c), z = [-(P[0][0] * e[0] + P[0][1] * e[1]), -(P[1][0] * e[0] + P[1][1] * e[1])];
+  const d = new Array(L.length).fill(0);
+  for (const i of idx) d[i] = w(i) * dot(dirs[i], z);
+  return d;
+}
+
+function buildRoom(name, spec) {
+  const notes = [];
+  let { L, unc, turns } = spec;
+  L = L.slice(); turns = turns.slice();
+  if (turns.length === L.length) {
+    const tot = turns.reduce((s, x) => s + x, 0);
+    if (Math.abs(tot + 360) > 0.1) notes.push(`${name}: svängarna summerar till ${tot.toFixed(0)}°`);
+    turns.pop();
+  }
+  if (turns.length !== L.length - 1) notes.push(`${name}: antalet svängar stämmer inte med antalet väggar`);
+  const heads = [0]; turns.forEach(t => heads.push(heads[heads.length - 1] + t));
+  const dirs = heads.map(h => [Math.cos(h * Math.PI / 180), Math.sin(h * Math.PI / 180)]);
+  const err = () => L.reduce((s, l, i) => add(s, mul(dirs[i], l)), [0, 0]);
+  let e = err();
+  if (len(e) > TOL) {
+    notes.push(`${name} går inte ihop: ${e[0] >= 0 ? "+" : ""}${e[0].toFixed(1)} i x, ${-e[1] >= 0 ? "+" : ""}${(-e[1]).toFixed(1)} i y`);
+    const changed = [];
+    const apply = d => d.forEach((dl, i) => { if (Math.abs(dl) > 0.5) changed.push(`vägg ${i + 1} ${L[i].toFixed(0)} → ${(L[i] + dl).toFixed(0)}`); L[i] += dl; });
+    const idx = unc.map((u, i) => u ? i : -1).filter(i => i >= 0);
+    if (idx.length) { apply(adjust(L, dirs, e, idx, false)); e = err(); }
+    if (len(e) > TOL) { apply(adjust(L, dirs, e, L.map((_, i) => i), true)); e = err(); }
+    if (changed.length) notes.push(`  justerat: ${changed.join(", ")}`);
+  }
+  const pts = [[0, 0]];
+  L.forEach((l, i) => pts.push(add(pts[i], mul(dirs[i], l))));
+  if (len(e) > TOL) {                              // nödlösning: kompassregeln
+    const tot = L.reduce((s, x) => s + x, 0); let cum = 0;
+    for (let i = 1; i < pts.length; i++) { cum += L[i - 1]; pts[i] = sub(pts[i], mul(e, cum / tot)); }
+  }
+  pts.pop();
+  return { local: pts, notes };
+}
+
+// ---------- tillstånd för en våning ----------
+function resolveFloor(plan, floor, act) {
+  const st = { rooms: new Map(), place: new Map(), checks: [], thick: new Map(), objs: new Map(), mods: new Map(), errors: [] };
+  const mark = (key, layer) => { if (!st.mods.has(key)) st.mods.set(key, []); st.mods.get(key).push(layer); };
+  const layers = plan.layers.filter(l => act.has(l.name) && floorOf(plan, l.name) === floor);
+  for (const l of layers) for (const op of l.ops) {
+    const where = `Rad ${op.line}`;
+    switch (op.t) {
+      case "room": st.rooms.set(op.name, { spec: structuredClone(op.spec), layer: l.name }); mark("rum:" + op.name, l.name); break;
+      case "rel": if (op.check) st.checks.push(op); else { st.place.set(op.a, op); mark("plac:" + op.a, l.name); } break;
+      case "thick": st.thick.set(`${op.room}.${op.k}`, op.val); mark(`tjock:${op.room}.${op.k}`, l.name); break;
+      case "len": {
+        const r = st.rooms.get(op.room);
+        if (!r || op.k < 1 || op.k > r.spec.L.length) { st.errors.push(`${where}: ${op.room}.${op.k} finns inte`); break; }
+        r.spec.L[op.k - 1] = op.val; r.spec.unc[op.k - 1] = op.unc; mark(`vägg:${op.room}.${op.k}`, l.name); break;
+      }
+      case "obj": st.objs.set(op.name, { ...op, layer: l.name }); mark("obj:" + op.name, l.name); break;
+      case "rename": {
+        const { from, to } = op;
+        if (!st.rooms.has(from)) { st.errors.push(`${where}: rummet ”${from}” finns inte`); break; }
+        if (st.rooms.has(to)) { st.errors.push(`${where}: rummet ”${to}” finns redan`); break; }
+        st.rooms.set(to, st.rooms.get(from)); st.rooms.delete(from);
+        if (st.place.has(from)) { const r = st.place.get(from); st.place.delete(from); st.place.set(to, { ...r, a: to }); }
+        for (const [k, r] of st.place) if (r.b === from) st.place.set(k, { ...r, b: to });
+        st.checks = st.checks.map(r => ({ ...r, a: r.a === from ? to : r.a, b: r.b === from ? to : r.b }));
+        for (const [k, v] of [...st.thick]) if (k.startsWith(from + ".")) { st.thick.delete(k); st.thick.set(to + k.slice(from.length), v); }
+        for (const [k, o] of st.objs) if (o.room === from) st.objs.set(k, { ...o, room: to });
+        mark("rum:" + from, l.name); mark("rum:" + to, l.name);
+        break;
+      }
+      case "remove":
+        if (st.objs.delete(op.name)) mark("obj:" + op.name, l.name);
+        else if (st.rooms.delete(op.name)) { st.place.delete(op.name); mark("rum:" + op.name, l.name); }
+        else st.errors.push(`${where}: ”${op.name}” finns inte att ta bort`);
+        break;
+    }
+  }
+  // krockar: samma sak ändrad av två lager där inget bygger på det andra
+  const conflicts = [], anc = new Map(layers.map(l => [l.name, ancestors(plan, l.name)]));
+  const related = (x, y) => x === y || anc.get(x).has(y) || anc.get(y).has(x);
+  for (const [key, ls] of st.mods) {
+    let all = ls;
+    if (key.startsWith("vägg:")) all = ls.concat(st.mods.get("rum:" + key.slice(5).split(".")[0]) || []);
+    for (let a = 0; a < all.length; a++) for (let b = a + 1; b < all.length; b++)
+      if (!related(all[a], all[b])) conflicts.push(`Krock: ”${all[a]}” och ”${all[b]}” ändrar båda ${key.split(":")[1]}`);
+  }
+  st.conflicts = [...new Set(conflicts)];
+  return st;
+}
+
+// ---------- placering ----------
+function wallOf(g, i) { const n = g.length; return [g[((i - 1) % n + n) % n], g[i % n]]; }
+
+function placeRooms(st) {
+  const notes = [], R = new Map();
+  for (const [name, r] of st.rooms) {
+    const b = buildRoom(name, r.spec);
+    R.set(name, { name, local: b.local, g: null, layer: r.layer }); notes.push(...b.notes);
+  }
+  const thk = (a, i, b, j) => {
+    for (const key of [`${a}.${i}`, `${b}.${j}`]) if (st.thick.has(key)) {
+      const v = st.thick.get(key);
+      if (v === null) notes.push(`${key} tjocklek okänd, ritad som ${STD}`);
+      return v ?? STD;
+    }
+    return STD;
+  };
+  const solve = (rel, A, B) => {
+    const [p, q] = wallOf(B.g, rel.j), d = unit(sub(q, p)), n = normal(d);
+    const nl = A.local.length, a0 = A.local[(rel.i - 1) % nl], a1 = A.local[rel.i % nl];
+    const dA = sub(a1, a0);
+    let ang = (Math.atan2(-d[1], -d[0]) - Math.atan2(dA[1], dA[0])) * 180 / Math.PI;
+    ang = ((ang + 180) % 360 + 360) % 360 - 180;
+    if (Math.abs(ang) <= 10) ang = 0;
+    const t = thk(rel.a, rel.i, rel.b, rel.j);
+    const [tgt, anc] = rel.mode === "start"
+      ? [add(add(p, mul(d, rel.s)), mul(n, t)), rot(a1, ang)]
+      : [add(sub(q, mul(d, rel.s)), mul(n, t)), rot(a0, ang)];
+    const T = sub(tgt, anc);
+    return A.local.map(pt => add(rot(pt, ang), T));
+  };
+  // första rummet utan placering hamnar i origo
+  const first = [...R.values()].find(r => !st.place.has(r.name));
+  if (first) first.g = first.local.map(p => p.slice());
+  let progress = true;
+  while (progress) {
+    progress = false;
+    for (const A of R.values()) {
+      if (A.g) continue;
+      const rel = st.place.get(A.name);
+      if (!rel) continue;
+      const B = R.get(rel.b);
+      if (!B) { notes.push(`Rad ${rel.line}: rummet ”${rel.b}” finns inte`); st.place.delete(A.name); continue; }
+      if (!B.g) continue;
+      if (rel.i > A.local.length || rel.j > B.g.length) { notes.push(`Rad ${rel.line}: väggnumret finns inte`); st.place.delete(A.name); continue; }
+      A.g = solve(rel, A, B); progress = true;
+    }
+  }
+  for (const A of R.values()) if (!A.g) notes.push(`${A.name} saknar placering`);
+  for (const rel of st.checks) {
+    const A = R.get(rel.a), B = R.get(rel.b);
+    if (!A?.g || !B?.g) continue;
+    const g = solve(rel, A, B);
+    const dev = Math.max(...g.map((p, k) => Math.max(Math.abs(p[0] - A.g[k][0]), Math.abs(p[1] - A.g[k][1]))));
+    if (dev > TOL) notes.push(`Kontroll ${rel.a}.${rel.i} mot ${rel.b}.${rel.j}: skiljer ${dev.toFixed(0)} cm`);
+  }
+  return { rooms: [...R.values()].filter(r => r.g), notes };
+}
+
+// ---------- väggar, objekt, kontroller ----------
+function area(g) { let s = 0; g.forEach((p, i) => { const q = g[(i + 1) % g.length]; s += p[0] * q[1] - q[0] * p[1]; }); return Math.abs(s) / 2; }
+
+function facing(rooms, r, k, lo0 = 0, hi0 = null) {  // motstående väggar inom FACE cm: [{lo,hi,dist}]
+  const [p, q] = wallOf(r.g, k), d = unit(sub(q, p)), n = normal(d), L = len(sub(q, p)), out = [];
+  const nr = r.g.length;
+  for (const o of rooms) for (let kk = 1; kk <= o.g.length; kk++) {
+    if (o === r && (kk === k || (kk % nr) + 1 === k || (k % nr) + 1 === kk)) continue;
+    const [p2, q2] = wallOf(o.g, kk), d2 = unit(sub(q2, p2));
+    if (dot(d, d2) > -0.98) continue;
+    const dist = dot(sub(p2, p), n);
+    if (!(dist > 0.01 && dist <= FACE)) continue;
+    let lo = Math.min(dot(sub(p2, p), d), dot(sub(q2, p), d)), hi = Math.max(dot(sub(p2, p), d), dot(sub(q2, p), d));
+    lo = Math.max(lo, lo0); hi = Math.min(hi, hi0 ?? L);
+    if (hi - lo > 1) out.push({ lo, hi, dist });
+  }
+  return out;
+}
+
+function wallPieces(rooms, thick) {
+  const pieces = [];
+  for (const r of rooms) {
+    const n = r.g.length, T = k => thick.get(`${r.name}.${k}`) ?? STD;
+    for (let k = 1; k <= n; k++) {
+      const [p, q] = wallOf(r.g, k), d = unit(sub(q, p)), nr = normal(d), L = len(sub(q, p));
+      const t = T(k), tp = T(((k - 2) % n + n) % n + 1), tn = T(k % n + 1);
+      const a = sub(p, mul(d, tp)), b = add(q, mul(d, tn));
+      pieces.push([a, b, add(b, mul(nr, t)), add(a, mul(nr, t))]);
+      for (const f of facing(rooms, r, k)) {
+        const s = add(p, mul(d, f.lo)), e = add(p, mul(d, f.hi));
+        pieces.push([s, e, add(e, mul(nr, f.dist)), add(s, mul(nr, f.dist))]);
+      }
+    }
+  }
+  return pieces;
+}
+
+function furnitureGeometry(o, P, d, m, s0) {     // ritas i väggens system: a längs väggen, b in i rummet
+  const w = o.width, D = o.depth;
+  const L = (a, b) => add(add(P(s0), mul(d, a)), mul(m, b - (o.out || 0)));
+  const rect = (a0, b0, a1, b1) => [L(a0, b0), L(a1, b0), L(a1, b1), L(a0, b1), L(a0, b0)];
+  const ell = (ca, cb, ra, rb, n = 28) => Array.from({ length: n + 1 }, (_, i) => { const t = 2 * Math.PI * i / n; return L(ca + ra * Math.cos(t), cb + rb * Math.sin(t)); });
+  const lines = [], dashed = [];
+  let label = null, outline = null;
+  switch (o.typ) {
+    case "kyl": label = "K"; break;
+    case "frys": label = "F"; break;
+    case "diskmaskin": label = "DM"; break;
+    case "spis": { const r = Math.min(w, D) / 6.5; for (const fa of [.28, .72]) for (const fb of [.3, .7]) lines.push(ell(w * fa, D * fb, r, r, 20)); break; }
+    case "diskho": lines.push(rect(8, 8, w - 8, D - 10)); break;
+    case "handfat": lines.push(ell(w / 2, D * .55, Math.min(w / 2 - 5, 25), D * .36)); break;
+    case "toalett": { const t = Math.min(18, D * .3); lines.push(rect(0, 0, w, t)); lines.push(ell(w / 2, t + (D - t) / 2, w / 2 - 3, (D - t) / 2 - 1)); break; }
+    case "dusch": {                             // vattendroppe med spetsen mot väggen
+      const r = Math.min(w, D) * .2;
+      lines.push(Array.from({ length: 41 }, (_, i) => { const t = 2 * Math.PI * i / 40;
+        return L(w / 2 + 1.1 * r * Math.sin(t) * Math.abs(Math.sin(t / 2)), D * .5 - 1.3 * r * Math.cos(t)); }));
+      break;
+    }
+    case "trappa": {                            // stegen längs den längsta sidan
+      const along = w >= D, run = along ? w : D, n = Math.max(2, Math.round(run / 25));
+      for (let i = 1; i < n; i++) lines.push(along ? [L(w * i / n, 0), L(w * i / n, D)] : [L(0, D * i / n), L(w, D * i / n)]);
+      if (o.up) {
+        const hd = Math.min(12, (along ? D : w) * .2);
+        let p0, p1;
+        if (o.up === "start" || o.up === "slut") { const [a0, a1] = o.up === "slut" ? [w * .05, w * .95] : [w * .95, w * .05]; p0 = [a0, D / 2]; p1 = [a1, D / 2]; }
+        else { const [b0, b1] = o.up === "från väggen" ? [D * .05, D * .95] : [D * .95, D * .05]; p0 = [w / 2, b0]; p1 = [w / 2, b1]; }
+        const dir = [Math.sign(p1[0] - p0[0]), Math.sign(p1[1] - p0[1])], perp = [dir[1], dir[0]];
+        lines.push([L(...p0), L(...p1)], [L(p1[0] - dir[0] * hd + perp[0] * hd * .7, p1[1] - dir[1] * hd + perp[1] * hd * .7), L(...p1),
+          L(p1[0] - dir[0] * hd - perp[0] * hd * .7, p1[1] - dir[1] * hd - perp[1] * hd * .7)]);
+      }
+      break;
+    }
+    case "garderob": break;
+    case "säng": {                              // huvudänden mot väggen
+      const ph = Math.min(40, D * .2);
+      if (w >= 140) { const pw = (w - 16) / 2; lines.push(rect(5, 6, 5 + pw, 6 + ph), rect(11 + pw, 6, 11 + 2 * pw, 6 + ph)); }
+      else { const pw = Math.min(w - 20, 70); lines.push(rect((w - pw) / 2, 6, (w + pw) / 2, 6 + ph)); }
+      lines.push([L(0, ph + 18), L(w, ph + 18)]);
+      break;
+    }
+    case "badkar": lines.push(rect(6, 6, w - 6, D - 6), ell(w - 20, D / 2, 3.5, 3.5, 12)); break;
+    case "tvättmaskin": label = "TM"; break;
+    case "torktumlare": label = "TT"; break;
+    case "takfönster": break;
+    case "soffa": {                             // ryggen mot väggen, ev. schäslong i ena änden
+      const back = Math.min(20, D * .25);
+      if (o.chaise) {
+        const cw = o.chaise.width, cd = o.chaise.depth, end = o.chaise.side === "slut", ac = end ? w - cw : cw;
+        outline = end ? [L(0, 0), L(w, 0), L(w, cd), L(ac, cd), L(ac, D), L(0, D), L(0, 0)]
+                      : [L(0, 0), L(w, 0), L(w, D), L(ac, D), L(ac, cd), L(0, cd), L(0, 0)];
+        lines.push([L(ac, back), L(ac, D)]);
+      }
+      lines.push([L(0, back), L(w, back)]);
+      break;
+    }
+    case "bäddsoffa": {                         // utfälld sängdel streckad
+      lines.push([L(0, Math.min(20, D * .25)), L(w, Math.min(20, D * .25))]);
+      if (o.bed > D) dashed.push([L(0, D), L(0, o.bed), L(w, o.bed), L(w, D)]);
+      break;
+    }
+    case "skrivbord": if (o.chair) lines.push(rect(w / 2 - 24, D - 12, w / 2 + 24, D + 36), [L(w / 2 - 22, D + 44), L(w / 2 + 22, D + 44)]); break;
+    case "elpiano": lines.push([L(4, D * .55), L(w - 4, D * .55)]); break;
+    case "bänk": break;
+    default: label = o.typ;
+  }
+  return { outline: o.typ === "toalett" ? null : (outline || rect(0, 0, w, D)), box: [L(0, 0), L(w, 0), L(w, D), L(0, D)], lines, dashed, label, center: L(w / 2, D / 2) };
+}
+
+function objectGeometry(o, rooms, thick) {
+  const r = rooms.find(x => x.name === o.room);
+  if (!r || o.k < 1 || o.k > r.g.length) return { error: `${o.kind} ${o.name}: väggen ${o.room}.${o.k} finns inte` };
+  const [p, q] = wallOf(r.g, o.k), d = unit(sub(q, p)), m = mul(normal(d), -1), L = len(sub(q, p));
+  const s0 = o.from === "start" ? o.dist : o.from === "mitt" ? (L - o.width) / 2 + o.dist : L - o.dist - o.width, s1 = s0 + o.width;
+  if (!isFurn(o) && (s0 < -0.5 || s1 > L + 0.5)) return { error: `${o.kind} ${o.name}: ryms inte på ${o.room}.${o.k} (${L.toFixed(0)} cm)` };
+  if (isFurn(o)) return furnitureGeometry(o, s => add(p, mul(d, s)), d, m, s0);
+  const f = r.furn ? [] : facing(rooms.filter(x => !x.furn), r, o.k, s0, s1);
+  const t = r.furn ? 0 : f.length ? Math.max(...f.map(x => x.dist)) : (thick.get(`${o.room}.${o.k}`) ?? STD);
+  const P = s => add(p, mul(d, s));
+  const gap = [P(s0), P(s1), sub(P(s1), mul(m, t)), sub(P(s0), mul(m, t))];   // m = in i rummet
+  const res = { gap: t > 0 ? gap : null, jambs: t > 0 ? [[P(s0), sub(P(s0), mul(m, t))], [P(s1), sub(P(s1), mul(m, t))]] : [] };
+  if (o.kind === "skjutdörr") {
+    const h = o.width / 2 + 4, o1 = t > 0 ? t * .35 : 3, o2 = t > 0 ? t * .7 : 7;   // på inredning: strax framför kanten
+    res.panels = [[sub(P(s0), mul(m, o1)), sub(P(s0 + h), mul(m, o1))], [sub(P(s1 - h), mul(m, o2)), sub(P(s1), mul(m, o2))]];
+  }
+  if (o.kind === "fönster") res.glass = [0, t / 2, t].map(off => [sub(P(s0), mul(m, off)), sub(P(s1), mul(m, off))]);
+  if (o.kind === "dörr") {
+    const face = o.swing === "in" ? 0 : t, into = o.swing === "in" ? m : mul(m, -1);
+    const sh = o.hinge === "start" ? s0 : s1, so = o.hinge === "start" ? s1 : s0;
+    const H = sub(P(sh), mul(m, face)), J = sub(P(so), mul(m, face)), tip = add(H, mul(into, o.width));
+    const a0 = Math.atan2(tip[1] - H[1], tip[0] - H[0]), a1 = Math.atan2(J[1] - H[1], J[0] - H[0]);
+    let da = a1 - a0; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI;
+    const arc = []; for (let i = 0; i <= 18; i++) { const a = a0 + da * i / 18; arc.push([H[0] + o.width * Math.cos(a), H[1] + o.width * Math.sin(a)]); }
+    res.leaf = [H, tip]; res.arc = arc;
+  }
+  return res;
+}
+
+const rnd = p => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10];
+function segDist(a, b, c, d) {
+  const pd = (p, s, e) => { const v = sub(e, s), t = Math.max(0, Math.min(1, dot(sub(p, s), v) / dot(v, v))); return len(sub(p, add(s, mul(v, t)))); };
+  return Math.min(pd(a, c, d), pd(b, c, d), pd(c, a, b), pd(d, a, b));
+}
+function checks(rooms, clip, thick = new Map()) {
+  const minT = name => Math.min(STD, ...[...thick].filter(([k, v]) => k.startsWith(name + ".") && v !== null).map(([, v]) => v));
+  const out = [];
+  for (let x = 0; x < rooms.length; x++) for (let y = x + 1; y < rooms.length; y++) {
+    const A = rooms[x], B = rooms[y];
+    let ov = [];
+    try { ov = clip.intersection([A.g.map(rnd)], [B.g.map(rnd)]); } catch (e) { }
+    const ar = ov.reduce((s, poly) => s + area(poly[0]), 0);
+    if (ar > 1) { out.push({ msg: `${A.name} och ${B.name} överlappar (${(ar / 1e4).toFixed(2)} m²)`, poly: ov }); continue; }
+    let md = Infinity;
+    for (let i = 1; i <= A.g.length; i++) for (let j = 1; j <= B.g.length; j++) {
+      const [a, b] = wallOf(A.g, i), [c, d] = wallOf(B.g, j); md = Math.min(md, segDist(a, b, c, d));
+    }
+    if (md < Math.min(minT(A.name), minT(B.name)) - TOL) out.push({ msg: `${A.name}–${B.name}: bara ${md.toFixed(0)} cm vägg` });
+  }
+  return out;
+}
+
+function computeFloor(plan, floor, act, clip) {
+  const st = resolveFloor(plan, floor, act);
+  const pl = placeRooms(st);
+  const fl = plan.layers.find(l => l.name === floor);           // våningens vridning och förskjutning
+  if (fl.rot || fl.off) for (const r of pl.rooms) r.g = r.g.map(p => add(rot(p, fl.rot || 0), fl.off || [0, 0]));
+  const objs = [], notes = [...st.errors, ...st.conflicts, ...pl.notes];
+  const all = [...st.objs.values()];
+  for (const o of all.filter(isFurn)) {
+    const g = objectGeometry(o, pl.rooms, st.thick);
+    if (g.error) notes.push(g.error); else objs.push({ ...o, geo: g });
+  }
+  const pseudo = objs.map(o => ({ name: o.name, g: o.geo.box, furn: true, kind: o.kind }));   // dörrar kan sitta på inredning
+  for (const o of all.filter(o => !isFurn(o))) {
+    const g = objectGeometry(o, [...pl.rooms, ...pseudo], st.thick);
+    if (g.error) notes.push(g.error); else objs.push({ ...o, geo: g, cat: o.cat || ({ möbel: "möbel", inredning: "inredning" }[pseudo.find(p => p.name === o.room)?.kind] ?? null) });
+  }
+  const chk = checks(pl.rooms, clip, st.thick);
+  const furn = objs.filter(o => isFurn(o) && o.typ !== "takfönster");
+  for (let a = 0; a < furn.length; a++) for (let b = a + 1; b < furn.length; b++) {
+    let ov = []; try { ov = clip.intersection([furn[a].geo.box.map(rnd)], [furn[b].geo.box.map(rnd)]); } catch (e) { }
+    if (ov.reduce((s, poly) => s + area(poly[0]), 0) > 1) notes.push(`${furn[a].name} och ${furn[b].name} överlappar`);
+  }
+  notes.push(...chk.map(c => c.msg));
+  let walls = wallPieces(pl.rooms, st.thick).map(p => [p.map(rnd).concat([rnd(p[0])])]);
+  try {                                            // slå ihop och fyll små glipor (< 0,15 m²)
+    walls = clip.union(...walls).map(poly => [poly[0], ...poly.slice(1).filter(h => area(h) >= 1500)]);
+  } catch (e) { }
+  return { floor, rooms: pl.rooms, walls, objs, overlaps: chk.filter(c => c.poly).flatMap(c => c.poly), notes };
+}
+
+if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, computeFloor, area, wallOf, floorOf, ancestors };
+
+</script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const EMBEDDED = $("plandata").textContent.replace(/^\n/, "");
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("planlosning." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem("planlosning." + k, JSON.stringify(v)); } catch (e) { } },
+  };
+  const FILTERS = [
+    ["väggobjekt", "Dörrar, fönster och öppningar", true], ["inredning", "Inredning", true], ["möbler", "Möbler", true],
+    ["namn", "Rumsnamn och yta", true], ["mått", "Väggnummer och mått", true], ["rutnät", "Rutnät, 1 m", true],
+  ];
+  let text = store.get("base", null) === EMBEDDED ? store.get("text", EMBEDDED) : EMBEDDED;
+  let checked = new Set(store.get("checked", null) || []);
+  let filters = Object.assign(Object.fromEntries(FILTERS.map(f => [f[0], f[2]])), store.get("filters", {}));
+  let plan, result = [], view = null, firstFit = true;
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const S = p => `${p[0].toFixed(1)},${(-p[1]).toFixed(1)}`;           // planens y uppåt -> svg y nedåt
+  const hue = name => { let h = 0; for (const c of name) h = (h * 31 + c.codePointAt(0)) % 360; return h; };
+
+  function compute() {
+    plan = parsePlan(text);
+    if (!store.get("checked", null)) plan.layers.filter(l => !l.parents.length).forEach(l => checked.add(l.name));
+    const act = activeSet(plan, checked);
+    const floors = plan.layers.filter(l => !l.parents.length && act.has(l.name)).map(l => l.name);
+    result = floors.map(f => computeFloor(plan, f, act, window.polygonClipping));
+    renderLayers(act); renderFilters(); renderNotes(); draw();
+  }
+
+  function renderLayers(act) {
+    const kids = new Map();
+    for (const l of plan.layers) { if (l.parents.length > 1) continue; const p = l.parents[0] ?? ""; if (!kids.has(p)) kids.set(p, []); kids.get(p).push(l); }
+    const li = l => {
+      const parentsOn = l.parents.every(p => act.has(p));
+      const extra = [l.parents.length > 1 ? `också på ${l.parents.slice(1).join(", ")}` : "", l.group ? `alternativ ${l.group}` : ""].filter(Boolean).join(", ");
+      const sub = (kids.get(l.name) || []).map(li).join("");
+      return `<li class="${l.parents.length ? "" : "floor"}"><label class="opt${parentsOn ? "" : " off"}">
+        <input type="checkbox" data-layer="${esc(l.name)}" ${checked.has(l.name) ? "checked" : ""}>
+        <span>${esc(l.name)}${extra ? ` <small>${esc(extra)}</small>` : ""}</span></label>${sub ? `<ul>${sub}</ul>` : ""}</li>`;
+    };
+    $("layers").innerHTML = (kids.get("") || []).map(li).join("") || `<li class="opt off">Planen har inga lager.</li>`;
+  }
+  function renderFilters() {
+    $("filters").innerHTML = FILTERS.map(([k, label]) =>
+      `<label class="opt"><input type="checkbox" data-filter="${k}" ${filters[k] ? "checked" : ""}><span>${label}</span></label>`).join("");
+  }
+  function renderNotes() {
+    const items = plan.errors.map(m => ["err", m]);
+    for (const f of result) for (const n of f.notes) {
+      const cls = /Krock|överlappar|bara \d+ cm|finns inte|saknar|ryms inte|skiljer/.test(n) ? "warn" : "";
+      items.push([cls, result.length > 1 ? `${f.floor}: ${n.trim()}` : n.trim()]);
+    }
+    $("notes").innerHTML = items.length ? items.map(([c, m]) => `<li class="${c}">${esc(m)}</li>`).join("") : `<li>Inga anmärkningar.</li>`;
+  }
+
+  function bounds() {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const pts = result.flatMap(f => [...f.rooms.flatMap(r => r.g), ...f.objs.flatMap(o => [...(o.geo.arc || []), ...(o.geo.leaf || [])])]);
+    for (const p of pts) {
+      x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, -p[1]); y1 = Math.max(y1, -p[1]);
+    }
+    return isFinite(x0) ? [x0, y0, x1, y1] : [0, 0, 1000, 800];
+  }
+  function fit() {
+    const [x0, y0, x1, y1] = bounds(), m = 60, svg = $("plan");
+    const W = svg.clientWidth || 800, H = svg.clientHeight || 600;
+    let w = x1 - x0 + 2 * m, h = y1 - y0 + 2 * m;
+    if (w / h < W / H) w = h * W / H; else h = w * H / W;
+    view = { x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - h / 2, w, h };
+    applyView();
+  }
+  function applyView() { $("plan").setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`); }
+
+  function labelPoint(g) {                            // punkt långt från väggarna, inne i rummet
+    const xs = g.map(p => p[0]), ys = g.map(p => p[1]);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    const inside = (x, y) => { let c = false; for (let i = 0, j = g.length - 1; i < g.length; j = i++) {
+      const [xi, yi] = g[i], [xj, yj] = g[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+    const edgeDist = (x, y) => { let m = Infinity; for (let i = 0; i < g.length; i++) {
+      const a = g[i], b = g[(i + 1) % g.length], v = [b[0] - a[0], b[1] - a[1]];
+      const t = Math.max(0, Math.min(1, ((x - a[0]) * v[0] + (y - a[1]) * v[1]) / (v[0] ** 2 + v[1] ** 2)));
+      m = Math.min(m, Math.hypot(x - a[0] - v[0] * t, y - a[1] - v[1] * t)); } return m; };
+    let best = [(x0 + x1) / 2, (y0 + y1) / 2], bd = -1;
+    for (let i = 1; i < 24; i++) for (let j = 1; j < 24; j++) {
+      const x = x0 + (x1 - x0) * i / 24, y = y0 + (y1 - y0) * j / 24;
+      if (!inside(x, y)) continue;
+      const d = edgeDist(x, y) - 0.15 * Math.hypot(x - (x0 + x1) / 2, y - (y0 + y1) / 2);
+      if (d > bd) { bd = d; best = [x, y]; }
+    }
+    return best;
+  }
+
+  function draw() {
+    const svg = $("plan"), out = []; let gridSvg = "";
+    if (filters["rutnät"]) {
+      const [x0, y0, x1, y1] = bounds(), g = [];
+      for (let x = Math.floor((x0 - 300) / 100) * 100; x <= x1 + 300; x += 100) g.push(`M${x},${y0 - 300}V${y1 + 300}`);
+      for (let y = Math.floor((y0 - 300) / 100) * 100; y <= y1 + 300; y += 100) g.push(`M${x0 - 300},${y}H${x1 + 300}`);
+      gridSvg = `<path class="gridline" d="${g.join("")}"/>`;
+    }
+    result.forEach((f, idx) => {
+      const show = o => !isFurn(o) && filters[o.cat === "möbel" ? "möbler" : o.cat || "väggobjekt"];
+      out.push(`<g class="${idx ? "upper" : ""}">`);
+      out.push(`<path class="walls" fill-rule="evenodd" d="${f.walls.map(poly => poly.map(ring => "M" + ring.map(S).join("L") + "Z").join("")).join("")}"/>`);
+      for (const r of f.rooms) out.push(`<polygon class="room" style="--h:${hue(r.name)}" points="${r.g.map(S).join(" ")}"/>`);
+      if (!idx) out.push(gridSvg);
+      for (const o of f.objs.filter(show)) {
+        const G = o.geo;
+        if (G.gap) out.push(`<polygon class="gapfill" points="${G.gap.map(S).join(" ")}"/>`);
+        if (G.panels) for (const l of G.panels) out.push(`<path class="leaf${o.cat === "möbel" ? " mob" : ""}" stroke-width="2.5" d="M${S(l[0])}L${S(l[1])}"/>`);
+        for (const j of G.jambs) out.push(`<path class="jamb" stroke-width="1.5" d="M${S(j[0])}L${S(j[1])}"/>`);
+        if (G.glass) for (const l of G.glass) out.push(`<path class="jamb" stroke-width="1" d="M${S(l[0])}L${S(l[1])}"/>`);
+        if (G.leaf) {
+          const dm = o.cat === "möbel" ? " mob" : "";
+          out.push(`<path class="leaf${dm}" stroke-width="2.5" d="M${S(G.leaf[0])}L${S(G.leaf[1])}"/>`);
+          out.push(`<path class="arc${dm}" d="M${G.arc.map(S).join("L")}"/>`);
+        }
+      }
+      for (const o of f.objs.filter(o => (o.kind === "möbel" && filters["möbler"]) || (o.kind === "inredning" && filters[o.typ === "takfönster" ? "väggobjekt" : "inredning"]))) {   // ovanpå väggar och öppningar
+        const G = o.geo, P = pts => pts.map(S).join("L"), mc = (o.kind === "möbel" ? " mob" : "") + (o.typ === "takfönster" ? " dash" : "");
+        if (G.outline) out.push(`<path class="furn${mc}" d="M${P(G.outline)}Z"/>`);
+        for (const l of G.lines) out.push(`<path class="furnline${mc}" d="M${P(l)}"/>`);
+        for (const l of G.dashed || []) out.push(`<path class="furnline dash${mc}" d="M${P(l)}"/>`);
+        if (G.label) out.push(`<text class="flabel${mc}" x="${G.center[0].toFixed(1)}" y="${(-G.center[1]).toFixed(1)}">${esc(G.label)}</text>`);
+      }
+      for (const poly of f.overlaps) out.push(`<path class="overlap" d="${poly.map(ring => "M" + ring.map(S).join("L") + "Z").join("")}"/>`);
+      if (filters["mått"]) for (const r of f.rooms) {
+        const n = r.g.length;
+        for (let k = 1; k <= n; k++) {
+          const [p, q] = wallOf(r.g, k), dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy);
+          if (L < 12) continue;
+          const nx = dy / L, ny = -dx / L;              // in i rummet
+          const m = [(p[0] + q[0]) / 2 + nx * 10, (p[1] + q[1]) / 2 + ny * 10];
+          let a = -Math.atan2(dy, dx) * 180 / Math.PI;
+          if (a > 90.1) a -= 180; if (a <= -89.9) a += 180;
+          out.push(`<text class="wlabel" transform="translate(${S(m)}) rotate(${a.toFixed(1)})">${k}: ${Math.round(L)}</text>`);
+        }
+      }
+      if (filters["namn"]) for (const r of f.rooms) {
+        const c = labelPoint(r.g);
+        out.push(`<text class="rname" x="${c[0].toFixed(1)}" y="${(-c[1] - 2).toFixed(1)}">${esc(r.name)}</text>`);
+        out.push(`<text class="rarea" x="${c[0].toFixed(1)}" y="${(-c[1] + 13).toFixed(1)}">${(area(r.g) / 1e4).toFixed(1).replace(".", ",")} m²</text>`);
+      }
+      out.push(`</g>`);
+    });
+    svg.innerHTML = out.join("");
+    if (firstFit || !view) { firstFit = false; fit(); } else applyView();
+  }
+
+  // ---------- interaktion ----------
+  $("layers").addEventListener("change", e => {
+    const name = e.target.dataset.layer; if (!name) return;
+    if (e.target.checked) {
+      checked.add(name);
+      const l = plan.layers.find(x => x.name === name);
+      if (l.group) plan.layers.filter(x => x.group === l.group && x.name !== name).forEach(x => checked.delete(x.name));
+    } else checked.delete(name);
+    store.set("checked", [...checked]); compute();
+  });
+  $("filters").addEventListener("change", e => {
+    const k = e.target.dataset.filter; if (!k) return;
+    filters[k] = e.target.checked; store.set("filters", filters); draw();
+  });
+  $("fit").onclick = fit;
+  $("editBtn").onclick = () => { $("src").value = text; $("editor").hidden = false; $("src").focus(); };
+  $("closeEd").onclick = () => { $("editor").hidden = true; };
+  const applyText = () => { text = $("src").value; store.set("text", text); store.set("base", EMBEDDED); compute(); $("edHint").textContent = "Omritad."; };
+  $("apply").onclick = applyText;
+  $("src").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); applyText(); } });
+  $("reset").onclick = () => { $("src").value = EMBEDDED; applyText(); $("edHint").textContent = "Inbyggd plan återställd."; };
+  $("copy").onclick = async () => {
+    try { await navigator.clipboard.writeText($("src").value); $("edHint").textContent = "Texten är kopierad."; }
+    catch (e) { $("src").select(); $("edHint").textContent = "Markerad, kopiera med Ctrl + C."; }
+  };
+
+  const svg = $("plan"), pts = new Map();
+  const toPlan = (cx, cy) => { const r = svg.getBoundingClientRect(); return [view.x + (cx - r.left) / r.width * view.w, view.y + (cy - r.top) / r.height * view.h]; };
+  const zoomAt = (cx, cy, f) => {
+    const [px, py] = toPlan(cx, cy);
+    view.w *= f; view.h *= f;
+    const r = svg.getBoundingClientRect();
+    view.x = px - (cx - r.left) / r.width * view.w; view.y = py - (cy - r.top) / r.height * view.h; applyView();
+  };
+  svg.addEventListener("wheel", e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(e.deltaY * 0.0015)); }, { passive: false });
+  svg.addEventListener("pointerdown", e => { svg.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); svg.classList.add("drag"); });
+  svg.addEventListener("pointermove", e => {
+    if (view) { const [x, y] = toPlan(e.clientX, e.clientY); $("coords").textContent = `x ${Math.round(x)} cm, y ${Math.round(y)} cm`; }
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId), r = svg.getBoundingClientRect();
+    if (pts.size === 1) {
+      view.x -= (e.clientX - prev[0]) / r.width * view.w; view.y -= (e.clientY - prev[1]) / r.height * view.h; applyView();
+    } else if (pts.size === 2) {
+      const other = [...pts.entries()].find(([id]) => id !== e.pointerId)[1];
+      const d0 = Math.hypot(prev[0] - other[0], prev[1] - other[1]), d1 = Math.hypot(e.clientX - other[0], e.clientY - other[1]);
+      if (d0 > 0 && d1 > 0) zoomAt((e.clientX + other[0]) / 2, (e.clientY + other[1]) / 2, d0 / d1);
+    }
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+  });
+  const up = e => { pts.delete(e.pointerId); if (!pts.size) svg.classList.remove("drag"); };
+  svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  window.addEventListener("resize", () => { if (view) fit(); });
+
+  const applyTheme = v => v === "system" ? document.documentElement.removeAttribute("data-plan-theme") : document.documentElement.setAttribute("data-plan-theme", v);
+  const theme = store.get("theme", "light");
+  applyTheme(theme); $("theme").value = theme;
+  $("theme").onchange = e => { store.set("theme", e.target.value); applyTheme(e.target.value); };
+
+  // ---------- bild ----------
+  let toastTimer;
+  const toast = msg => { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2600); };
+  async function renderPng() {
+    const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim();
+    const css = `.room{fill:${v("--paper")}}.walls{fill:${v("--wall")}}.gapfill{fill:${v("--gap")}}` +
+      `.jamb,.leaf{stroke:${v("--wall")};fill:none;stroke-linecap:round}.arc{stroke:${v("--wall")};fill:none;stroke-width:1}` +
+      `.overlap{fill:${v("--danger")};fill-opacity:.45;stroke:${v("--danger")};stroke-width:1.5}` +
+      `.rname{font:600 15px Arial,Helvetica,sans-serif;fill:${v("--ink")};text-anchor:middle}` +
+      `.rarea{font:400 12px Arial,Helvetica,sans-serif;fill:${v("--muted")};text-anchor:middle}` +
+      `.wlabel{font:400 9px "Arial Narrow",Arial,sans-serif;fill:${v("--muted")};text-anchor:middle;dominant-baseline:central}` +
+      `.furn{fill:${v("--paper")};stroke:${v("--wall")};stroke-width:1}.furnline{fill:none;stroke:${v("--wall")};stroke-width:.8}` +
+      `.flabel{font:500 11px Arial,Helvetica,sans-serif;fill:${v("--muted")};text-anchor:middle;dominant-baseline:central}` +
+      `.furn.mob,.furnline.mob{stroke:${v("--mobel")}}.furn.mob{stroke-width:1.3}.flabel.mob{fill:${v("--mobel")}}.furn.dash{fill:none;stroke-dasharray:8 5}.furnline.dash{stroke-dasharray:6 4}.leaf.mob,.arc.mob{stroke:${v("--mobel")}}` +
+      `.gridline{stroke:${v("--grid")};stroke-width:1}.upper{opacity:${v("--upper")}}`;
+    const [x0, y0, x1, y1] = bounds(), m = 40, vb = [x0 - m, y0 - m, x1 - x0 + 2 * m, y1 - y0 + 2 * m], px = 2;
+    const W = Math.round(vb[2] * px), H = Math.round(vb[3] * px);
+    const src = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="${vb.join(" ")}"><style>${css}</style>` +
+      `<rect x="${vb[0]}" y="${vb[1]}" width="${vb[2]}" height="${vb[3]}" fill="${v("--paper")}"/>${$("plan").innerHTML}</svg>`;
+    const img = new Image();
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(src);
+    await img.decode();
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    c.getContext("2d").drawImage(img, 0, 0, W, H);
+    return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error("png")), "image/png"));
+  }
+  $("copyImg").onclick = async () => {
+    try { await navigator.clipboard.write([new ClipboardItem({ "image/png": renderPng() })]); toast("Bilden är kopierad."); }
+    catch (e) { toast($("saveImg").hidden ? "Webbläsaren tillåter inte att bilden kopieras här." : "Kopiering blockerades. Använd Spara PNG."); }
+  };
+  let downloads = null;
+  const lookForDownloads = () => window.claude?.use?.("downloads").then(d => { downloads = d; $("saveImg").hidden = !d; }).catch(() => { });
+  setTimeout(lookForDownloads, 0); window.addEventListener("load", lookForDownloads);
+  $("saveImg").onclick = async () => {
+    if (!downloads) return;
+    try { await downloads.save({ filename: "planlosning.png", data: await renderPng() }); toast("Bilden är sparad."); }
+    catch (e) { if (e?.code !== "declined") toast("Bilden kunde inte sparas."); }
+  };
+
+  if (!window.polygonClipping) window.polygonClipping = { intersection: () => [], union: () => { throw 0; } };
+  compute();
+})();
+</script>
+</body>
+</html>
