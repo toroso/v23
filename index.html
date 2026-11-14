@@ -11,7 +11,7 @@
 :root {
   --paper: #eceef0; --panel: #f7f8f9; --ink: #1c2530; --muted: #5b6672; --rule: #cfd4da;
   --wall: #26303c; --grid: rgba(38,48,60,.07); --accent: #2d5ca6; --danger: #c13f2b;
-  --room-s: 42%; --room-l: 89%; --gap: #eceef0; --upper: .55;
+  --gap: #eceef0; --upper: .55;
   color-scheme: light;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
@@ -21,26 +21,26 @@
   :root:not([data-theme="light"]) {
     --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
     --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
-    --room-s: 22%; --room-l: 23%; --gap: #161a20;
+    --gap: #161a20;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
   --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
-  --room-s: 22%; --room-l: 23%; --gap: #161a20;
+  --gap: #161a20;
   color-scheme: dark;
 }
 :root[data-plan-theme="light"] {
   --paper: #eceef0; --panel: #f7f8f9; --ink: #1c2530; --muted: #5b6672; --rule: #cfd4da;
   --wall: #26303c; --grid: rgba(38,48,60,.07); --accent: #2d5ca6; --danger: #c13f2b;
-  --room-s: 42%; --room-l: 89%; --gap: #eceef0;
+  --gap: #eceef0;
   color-scheme: light;
 }
 :root[data-plan-theme="dark"] {
   --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
   --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
-  --room-s: 22%; --room-l: 23%; --gap: #161a20;
+  --gap: #161a20;
   color-scheme: dark;
 }
 :root { --mobel: #1f3f8f; }
@@ -316,7 +316,7 @@ lager WC2 på Undervåning
   inredning WC2Dusch: WC2.6 start 5, 80 x 80, dusch
 
 
-lager Sovrum3 på Undervåning
+lager Sovrum3_1 på Undervåning, alternativ Sovrum3
   MasterBedroom.2 = 200
   MasterBedroom.4 = 200
   rum Sovrum3: 260 H 210 H 260 H 210
@@ -327,6 +327,23 @@ lager Sovrum3 på Undervåning
   Hall.2 mot Sovrum3.2, start 0
   dörr DörrSovrum3: Sovrum3.2 start 10, 80, in, gångjärn start
   möbel SängSovrum3: Sovrum3.3 slut 10, 120 x 200, säng
+  möbel SängMasterBedroom: MasterBedroom.4 slut 40, 120 x 200, säng      # vriden, huvudänden mot .4
+
+
+# Som Sovrum3_1, men Sovrum3 så låg som möjligt och MasterBedroom lika mycket större (summan är 410).
+# Sängen har kudden mot .4 och når 200 in, alltså 60 från .2 där dörren sitter (gångjärn 10 från .1).
+# Öppen dörr (80) når där √(80² − 60²) ≈ 53 ner: 10 + 53 + 90 (säng) = 153, uppåt till 160.
+lager Sovrum3_2 på Undervåning, alternativ Sovrum3
+  MasterBedroom.2 = 250
+  MasterBedroom.4 = 250
+  rum Sovrum3: 260 H 160 H 260 H 160
+    Sovrum3.1 mot MasterBedroom.3, slut 0
+  Sovrum1.1 mot Sovrum3.3, slut 0
+  Hall.2 = 470
+  Hall.4 = 240
+  Hall.2 mot Sovrum3.2, start 0
+  dörr DörrSovrum3: Sovrum3.2 start 10, 80, in, gångjärn start
+  möbel SängSovrum3: Sovrum3.4 start 0, 90 x 200, säng      # kudden mot .4, i hörnet mot .3
   möbel SängMasterBedroom: MasterBedroom.4 slut 40, 120 x 200, säng      # vriden, huvudänden mot .4
 
 
@@ -909,15 +926,14 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   let text = store.get("base", null) === EMBEDDED ? store.get("text", EMBEDDED) : EMBEDDED;
   let checked = new Set(store.get("checked", null) || []);
   let filters = Object.assign(Object.fromEntries(FILTERS.map(f => [f[0], f[2]])), store.get("filters", {}));
-  let plan, result = [], view = null, firstFit = true;
+  let plan, result = [], view = null, firstFit = true, defaultFloors = !store.get("checked", null);
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const S = p => `${p[0].toFixed(1)},${(-p[1]).toFixed(1)}`;           // planens y uppåt -> svg y nedåt
-  const hue = name => { let h = 0; for (const c of name) h = (h * 31 + c.codePointAt(0)) % 360; return h; };
 
   function compute() {
     plan = parsePlan(text);
-    if (!store.get("checked", null)) plan.layers.filter(l => !l.parents.length).forEach(l => checked.add(l.name));
+    if (defaultFloors) { defaultFloors = false; plan.layers.filter(l => !l.parents.length).forEach(l => checked.add(l.name)); }   // bara första gången
     const act = activeSet(plan, checked);
     const floors = plan.layers.filter(l => !l.parents.length && act.has(l.name)).map(l => l.name);
     result = floors.map(f => computeFloor(plan, f, act, window.polygonClipping));
@@ -999,7 +1015,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       const show = o => !isFurn(o) && filters[o.cat === "möbel" ? "möbler" : o.cat || "väggobjekt"];
       out.push(`<g class="${idx ? "upper" : ""}">`);
       out.push(`<path class="walls" fill-rule="evenodd" d="${f.walls.map(poly => poly.map(ring => "M" + ring.map(S).join("L") + "Z").join("")).join("")}"/>`);
-      for (const r of f.rooms) out.push(`<polygon class="room" style="--h:${hue(r.name)}" points="${r.g.map(S).join(" ")}"/>`);
+      for (const r of f.rooms) out.push(`<polygon class="room" points="${r.g.map(S).join(" ")}"/>`);
       if (!idx) out.push(gridSvg);
       for (const o of f.objs.filter(show)) {
         const G = o.geo;
