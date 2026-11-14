@@ -11,7 +11,7 @@
 :root {
   --paper: #eceef0; --panel: #f7f8f9; --ink: #1c2530; --muted: #5b6672; --rule: #cfd4da;
   --wall: #26303c; --grid: rgba(38,48,60,.07); --accent: #2d5ca6; --danger: #c13f2b;
-  --gap: #eceef0; --upper: .55;
+  --gap: #eceef0;
   color-scheme: light;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
@@ -131,7 +131,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .furnline { fill: none; stroke: var(--wall); stroke-width: .8; }
 .flabel { font: 500 11px "Archivo", sans-serif; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
 .gridline { stroke: var(--grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.upper { opacity: var(--upper); }
+.upper .room, .upper .furn { fill: none; }   /* ovanvåningen ritas ovanpå utan att täcka */
 @media (max-width: 760px) {
   .app { grid-template-columns: 1fr; grid-template-rows: 62% minmax(0, 1fr); }
   .stage { grid-row: 1; }
@@ -140,6 +140,23 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   h2 { margin-top: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* utskrift: #print byggs vid beforeprint, i ljusa färger */
+#print {
+  display: none; background: #fff; color: #1c2530;
+  --paper: #fff; --gap: #fff; --ink: #1c2530; --muted: #5b6672; --wall: #26303c; --grid: rgba(38,48,60,.14);
+  --mobel: #1f3f8f; --danger: #c13f2b;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+#print svg { display: block; }
+#print .plan { margin: 0 auto; }
+#print footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; margin-top: 4mm; font: 9pt/1.35 "Archivo", Arial, sans-serif; }
+#print footer b { font-weight: 600; }
+#print footer small { color: #5b6672; font-size: 7.5pt; }
+@media print {
+  html, body { height: auto; background: #fff; }
+  .app { display: none !important; }
+  #print { display: block; }
+}
 </style>
 </head>
 <body>
@@ -158,6 +175,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   </aside>
   <main class="stage" id="stage">
     <div class="toolbar">
+      <button id="printBtn" type="button">Skriv ut</button>
       <button id="copyImg" type="button">Kopiera bild</button>
       <button id="saveImg" type="button" hidden>Spara PNG</button>
       <button id="fit" type="button">Anpassa vy</button>
@@ -178,6 +196,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
     </section>
   </main>
 </div>
+<div id="print" aria-hidden="true"></div>
 
 <script type="text/plain" id="plandata"># Planlösning. Mått i cm, innermått.
 # Rum beskrivs medurs från övre vänstra hörnet, första väggen åt höger (öster).
@@ -1055,8 +1074,8 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     return best;
   }
 
-  function draw() {
-    const svg = $("plan"), out = []; let gridSvg = "";
+  function markup(ts = 1, sw = 1) {                  // ts: textskala, sw: linjeskala (utskrift)
+    const out = []; let gridSvg = "";
     if (filters["rutnät"]) {
       const [x0, y0, x1, y1] = bounds(), g = [];
       for (let x = Math.floor((x0 - 300) / 100) * 100; x <= x1 + 300; x += 100) g.push(`M${x},${y0 - 300}V${y1 + 300}`);
@@ -1072,12 +1091,12 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       for (const o of f.objs.filter(show)) {
         const G = o.geo;
         if (G.gap) out.push(`<polygon class="gapfill" points="${G.gap.map(S).join(" ")}"/>`);
-        if (G.panels) for (const l of G.panels) out.push(`<path class="leaf${o.cat === "möbel" ? " mob" : ""}" stroke-width="2.5" d="M${S(l[0])}L${S(l[1])}"/>`);
-        for (const j of G.jambs) out.push(`<path class="jamb" stroke-width="1.5" d="M${S(j[0])}L${S(j[1])}"/>`);
-        if (G.glass) for (const l of G.glass) out.push(`<path class="jamb" stroke-width="1" d="M${S(l[0])}L${S(l[1])}"/>`);
+        if (G.panels) for (const l of G.panels) out.push(`<path class="leaf${o.cat === "möbel" ? " mob" : ""}" stroke-width="${2.5 * sw}" d="M${S(l[0])}L${S(l[1])}"/>`);
+        for (const j of G.jambs) out.push(`<path class="jamb" stroke-width="${1.5 * sw}" d="M${S(j[0])}L${S(j[1])}"/>`);
+        if (G.glass) for (const l of G.glass) out.push(`<path class="jamb" stroke-width="${sw}" d="M${S(l[0])}L${S(l[1])}"/>`);
         if (G.leaf) {
           const dm = o.cat === "möbel" ? " mob" : "";
-          out.push(`<path class="leaf${dm}" stroke-width="2.5" d="M${S(G.leaf[0])}L${S(G.leaf[1])}"/>`);
+          out.push(`<path class="leaf${dm}" stroke-width="${2.5 * sw}" d="M${S(G.leaf[0])}L${S(G.leaf[1])}"/>`);
           out.push(`<path class="arc${dm}" d="M${G.arc.map(S).join("L")}"/>`);
         }
       }
@@ -1093,9 +1112,9 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
         const n = r.g.length;
         for (let k = 1; k <= n; k++) {
           const [p, q] = wallOf(r.g, k), dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy);
-          if (L < 12) continue;
+          if (L < 12 * ts) continue;
           const nx = dy / L, ny = -dx / L;              // in i rummet
-          const m = [(p[0] + q[0]) / 2 + nx * 10, (p[1] + q[1]) / 2 + ny * 10];
+          const m = [(p[0] + q[0]) / 2 + nx * 10 * ts, (p[1] + q[1]) / 2 + ny * 10 * ts];
           let a = -Math.atan2(dy, dx) * 180 / Math.PI;
           if (a > 90.1) a -= 180; if (a <= -89.9) a += 180;
           out.push(`<text class="wlabel" transform="translate(${S(m)}) rotate(${a.toFixed(1)})">${k}: ${Math.round(L)}</text>`);
@@ -1103,12 +1122,15 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       }
       if (filters["namn"]) for (const r of f.rooms) {
         const c = labelPoint(r.g);
-        out.push(`<text class="rname" x="${c[0].toFixed(1)}" y="${(-c[1] - 2).toFixed(1)}">${esc(r.name)}</text>`);
-        out.push(`<text class="rarea" x="${c[0].toFixed(1)}" y="${(-c[1] + 13).toFixed(1)}">${(area(r.g) / 1e4).toFixed(1).replace(".", ",")} m²</text>`);
+        out.push(`<text class="rname" x="${c[0].toFixed(1)}" y="${(-c[1] - 2 * ts).toFixed(1)}">${esc(r.name)}</text>`);
+        out.push(`<text class="rarea" x="${c[0].toFixed(1)}" y="${(-c[1] + 13 * ts).toFixed(1)}">${(area(r.g) / 1e4).toFixed(1).replace(".", ",")} m²</text>`);
       }
       out.push(`</g>`);
     });
-    svg.innerHTML = out.join("");
+    return out.join("");
+  }
+  function draw() {
+    $("plan").innerHTML = markup();
     if (firstFit || !view) { firstFit = false; fit(); } else applyView();
   }
 
@@ -1170,6 +1192,39 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   applyTheme(theme); $("theme").value = theme;
   $("theme").onchange = e => { store.set("theme", e.target.value); applyTheme(e.target.value); };
 
+  // ---------- utskrift: allt som är valt under Lager och Visa, A4, skala 1:50/1:100/1:200 ----------
+  const A4 = [210, 297], MARGIN = 10, FOOTER = 18;            // mm
+  function buildPrint() {
+    const [x0, y0, x1, y1] = bounds(), pad = 15, w = x1 - x0 + 2 * pad, h = y1 - y0 + 2 * pad;   // cm
+    const room = land => [(land ? A4[1] : A4[0]) - 2 * MARGIN, (land ? A4[0] : A4[1]) - 2 * MARGIN - FOOTER];
+    let N = 1000, land = w > h;
+    for (const n of [50, 100, 200, 500]) {                    // största skalan som får plats, helst stående
+      const ok = [false, true].find(l => { const [pw, ph] = room(l); return w * 10 / n <= pw && h * 10 / n <= ph; });
+      if (ok !== undefined) { N = n; land = ok; break; }
+    }
+    const ts = 0.021 * N, sw = 0.015 * N;                      // text ca 9 pt och linjer lika tjocka på papperet oavsett skala
+    const css = `@page { size: A4 ${land ? "landscape" : "portrait"}; margin: ${MARGIN}mm; }` +
+      `#print .rname{font-size:${15 * ts}px}#print .rarea{font-size:${12 * ts}px}#print .wlabel{font-size:${9 * ts}px}#print .flabel{font-size:${11 * ts}px}` +
+      `#print .arc,#print .furn{stroke-width:${sw}}#print .furn.mob{stroke-width:${1.3 * sw}}#print .furnline{stroke-width:${0.8 * sw}}#print .overlap{stroke-width:${1.5 * sw}}` +
+      `#print .furn.dash{stroke-dasharray:${8 * sw} ${5 * sw}}#print .furnline.dash{stroke-dasharray:${6 * sw} ${4 * sw}}`;
+    let st = $("printstyle");
+    if (!st) { st = document.createElement("style"); st.id = "printstyle"; document.head.appendChild(st); }
+    st.textContent = css;
+    const m = 1000 / N, bar = N <= 100 ? 2 : 5;               // mm per meter, skalstockens längd i meter
+    const segs = Array.from({ length: bar }, (_, i) => `<rect x="${i * m}" y="0" width="${m}" height="2" fill="${i % 2 ? "#fff" : "#1c2530"}" stroke="#1c2530" stroke-width=".2"/>`).join("") +
+      Array.from({ length: bar + 1 }, (_, i) => `<text x="${i * m}" y="5.6" font-size="2.8" text-anchor="middle" fill="#1c2530" font-family="Arial, sans-serif">${i}${i === bar ? " m" : ""}</text>`).join("");
+    const act = activeSet(plan, checked);
+    const layers = plan.layers.filter(l => act.has(l.name) && l.parents.length < 2).map(l => l.name).join(", ");
+    $("print").innerHTML =
+      `<svg class="plan" xmlns="http://www.w3.org/2000/svg" width="${(w * 10 / N).toFixed(2)}mm" height="${(h * 10 / N).toFixed(2)}mm" viewBox="${x0 - pad} ${y0 - pad} ${w} ${h}">${markup(ts, sw)}</svg>` +
+      `<footer><div><b>Planlösning</b> · skala 1:${N} · A4<br>${esc(layers)}<br>` +
+      `<small>Skriv ut i 100 %, inte ”Anpassa till sida”. Skalstocken ska då vara ${(bar * m / 10).toLocaleString("sv")} cm.</small></div>` +
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${bar * m + 8}mm" height="7mm" viewBox="-4 -0.5 ${bar * m + 8} 7">${segs}</svg></footer>`;
+    return { N, land };
+  }
+  window.addEventListener("beforeprint", buildPrint);         // även Ctrl + P
+  $("printBtn").onclick = () => window.print();
+
   // ---------- bild ----------
   let toastTimer;
   const toast = msg => { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2600); };
@@ -1184,7 +1239,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       `.furn{fill:${v("--paper")};stroke:${v("--wall")};stroke-width:1}.furnline{fill:none;stroke:${v("--wall")};stroke-width:.8}` +
       `.flabel{font:500 11px Arial,Helvetica,sans-serif;fill:${v("--muted")};text-anchor:middle;dominant-baseline:central}` +
       `.furn.mob,.furnline.mob{stroke:${v("--mobel")}}.furn.mob{stroke-width:1.3}.flabel.mob{fill:${v("--mobel")}}.furn.dash{fill:none;stroke-dasharray:8 5}.furnline.dash{stroke-dasharray:6 4}.leaf.mob,.arc.mob{stroke:${v("--mobel")}}` +
-      `.gridline{stroke:${v("--grid")};stroke-width:1}.upper{opacity:${v("--upper")}}`;
+      `.gridline{stroke:${v("--grid")};stroke-width:1}.upper .room,.upper .furn{fill:none}`;
     const [x0, y0, x1, y1] = bounds(), m = 40, vb = [x0 - m, y0 - m, x1 - x0 + 2 * m, y1 - y0 + 2 * m], px = 2;
     const W = Math.round(vb[2] * px), H = Math.round(vb[3] * px);
     const src = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="${vb.join(" ")}"><style>${css}</style>` +
