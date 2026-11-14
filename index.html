@@ -153,7 +153,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 #print text { font-family: Arial, Helvetica, sans-serif; text-rendering: geometricPrecision; }   /* webbtypsnitt blir fel i Windows utskrift */
 #print .wlabel { font-family: "Arial Narrow", Arial, sans-serif; }
 #print footer b { font-weight: 600; }
-#print footer small { color: #5b6672; font-size: 7.5pt; }
 @media print {
   html, body { height: auto; background: #fff; }
   .app { display: none !important; }
@@ -1219,8 +1218,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     const layers = plan.layers.filter(l => act.has(l.name) && l.parents.length < 2).map(l => l.name).join(", ");
     $("print").innerHTML =
       `<svg class="plan" xmlns="http://www.w3.org/2000/svg" width="${(w * 10 / N).toFixed(2)}mm" height="${(h * 10 / N).toFixed(2)}mm" viewBox="${x0 - pad} ${y0 - pad} ${w} ${h}">${markup(ts, sw)}</svg>` +
-      `<footer><div><b>Planlösning</b> · skala 1:${N} · A4<br>${esc(layers)}<br>` +
-      `<small>Skriv ut i 100 %, inte ”Anpassa till sida”. Skalstocken ska då vara ${(bar * m / 10).toLocaleString("sv")} cm.</small></div>` +
+      `<footer><div><b>Planlösning</b> · skala 1:${N} · A4<br>${esc(layers)}</div>` +
       `<svg xmlns="http://www.w3.org/2000/svg" width="${bar * m + 8}mm" height="7mm" viewBox="-4 -0.5 ${bar * m + 8} 7">${segs}</svg></footer>`;
     return { N, land };
   }
