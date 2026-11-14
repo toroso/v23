@@ -11,7 +11,7 @@
 :root {
   --paper: #eceef0; --panel: #f7f8f9; --ink: #1c2530; --muted: #5b6672; --rule: #cfd4da;
   --wall: #26303c; --grid: rgba(38,48,60,.07); --accent: #2d5ca6; --danger: #c13f2b;
-  --room-s: 42%; --room-l: 89%; --gap: #eceef0; --upper: .55;
+  --gap: #eceef0; --upper: .55;
   color-scheme: light;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
@@ -21,26 +21,26 @@
   :root:not([data-theme="light"]) {
     --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
     --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
-    --room-s: 22%; --room-l: 23%; --gap: #161a20;
+    --gap: #161a20;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
   --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
-  --room-s: 22%; --room-l: 23%; --gap: #161a20;
+  --gap: #161a20;
   color-scheme: dark;
 }
 :root[data-plan-theme="light"] {
   --paper: #eceef0; --panel: #f7f8f9; --ink: #1c2530; --muted: #5b6672; --rule: #cfd4da;
   --wall: #26303c; --grid: rgba(38,48,60,.07); --accent: #2d5ca6; --danger: #c13f2b;
-  --room-s: 42%; --room-l: 89%; --gap: #eceef0;
+  --gap: #eceef0;
   color-scheme: light;
 }
 :root[data-plan-theme="dark"] {
   --paper: #161a20; --panel: #1d2229; --ink: #e4e8ec; --muted: #98a2ad; --rule: #333a43;
   --wall: #d3d9e0; --grid: rgba(211,217,224,.06); --accent: #86a9e6; --danger: #ef7a62;
-  --room-s: 22%; --room-l: 23%; --gap: #161a20;
+  --gap: #161a20;
   color-scheme: dark;
 }
 :root { --mobel: #1f3f8f; }
@@ -185,10 +185,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 #
 # lager X på Y             X bygger på Y (flera föräldrar: på A, B – ett sådant lager har ingen kryssruta utan är på när alla föräldrar är på). Lager utan ”på” är en våning.
 # lager X på Y, alternativ M   bara ett lager i gruppen M kan vara på åt gången.
+#                ett lager på A, B som ändrar samma sak som A och B tar bort krocken mellan dem.
 # rum X: 380 H 420 …       rum; en ny definition i ett senare lager ersätter den gamla.
 # A.i mot B.j, start s     placering: A.i slutar s cm efter B.j:s start.
 # A.i mot B.j, slut s      placering: A.i börjar s cm före B.j:s slut.
-# kontroll A.i mot B.j …   kontrollerar läget utan att placera.
+# kontroll A.i mot B.j …   kontrollerar läget utan att placera; en senare kontroll mellan samma rum ersätter den förra.
 # X.k tjocklek t           väggtjocklek, standard 10. ? = okänd.
 # X.k = 270                ändrar en väggs längd.
 # dörr D: X.k start 30, 80, in, gångjärn start     (start/slut = mätt från väggens start/slut)
@@ -244,6 +245,12 @@ lager Undervåning
 
   rum GN: 55 H 160 H 55 H 160
     GN.1 mot Sovrum2.3, slut 0
+
+  rum Balkong: 480 H 180 H 480 H 180      # Balkong.2 i linje med Matsal.2
+    Balkong.3 mot Matsal.1, slut 0
+    Balkong.1 tjocklek 2      # räcken
+    Balkong.2 tjocklek 2
+    Balkong.4 tjocklek 2
 
   # Öppningar
   öppning ÖppningMatsalKök: Kök.1 start 240, 175
@@ -316,7 +323,7 @@ lager WC2 på Undervåning
   inredning WC2Dusch: WC2.6 start 5, 80 x 80, dusch
 
 
-lager Sovrum3 på Undervåning
+lager Sovrum3_1 på Undervåning, alternativ Sovrum3
   MasterBedroom.2 = 200
   MasterBedroom.4 = 200
   rum Sovrum3: 260 H 210 H 260 H 210
@@ -328,6 +335,67 @@ lager Sovrum3 på Undervåning
   dörr DörrSovrum3: Sovrum3.2 start 10, 80, in, gångjärn start
   möbel SängSovrum3: Sovrum3.3 slut 10, 120 x 200, säng
   möbel SängMasterBedroom: MasterBedroom.4 slut 40, 120 x 200, säng      # vriden, huvudänden mot .4
+
+
+# Som Sovrum3_1, men Sovrum3 så låg som möjligt och MasterBedroom lika mycket större (summan är 410).
+# Sängen har kudden mot .4 och når 200 in, alltså 60 från .2 där dörren sitter (gångjärn 10 från .1).
+# Öppen dörr (80) når där √(80² − 60²) ≈ 53 ner: 10 + 53 + 90 (säng) = 153, uppåt till 160.
+lager Sovrum3_2 på Undervåning, alternativ Sovrum3
+  MasterBedroom.2 = 250
+  MasterBedroom.4 = 250
+  rum Sovrum3: 260 H 160 H 260 H 160
+    Sovrum3.1 mot MasterBedroom.3, slut 0
+  Sovrum1.1 mot Sovrum3.3, slut 0
+  Hall.2 = 470
+  Hall.4 = 240
+  Hall.2 mot Sovrum3.2, start 0
+  dörr DörrSovrum3: Sovrum3.2 start 10, 80, in, gångjärn start
+  möbel SängSovrum3: Sovrum3.4 start 0, 90 x 200, säng      # kudden mot .4, i hörnet mot .3
+  möbel SängMasterBedroom: MasterBedroom.4 slut 40, 120 x 200, säng      # vriden, huvudänden mot .4
+
+
+# Sovrum1 flyttas 40 uppåt och växer sedan 60 uppåt till 350 (MasterBedroom blir 320).
+# Sängen följer .3, dörren mot hallen står kvar.
+# WC1 blir Sovrum3: 40 högre och 95 bredare åt höger, med en ny vägg (.3) ner mot den sneda.
+# Hallens bit nedanför Sovrum1 går till Sovrum3, så Hall.1 och .17 försvinner och
+# .16, .18 och .2 blir en vägg. Hallens väggar numreras om (gammalt nr − 2), därför
+# görs allt som pekar på dem om här. Lagret går inte ihop med WC2, som pekar på gamla nummer.
+# Fönstren mot fasaden står kvar där de är.
+lager Sovrum3_3 på Undervåning, alternativ Sovrum3
+  MasterBedroom.2 = 320
+  MasterBedroom.4 = 320
+  Sovrum1.2 = 350
+  Sovrum1.4 = 350
+  fönster FönsterSovrum1: Sovrum1.4 slut 180, 150
+  dörr DörrSovrum1: Sovrum1.2 start 170, 80, in, gångjärn start
+  # som lager WC1
+  ta bort WC1Toalett
+  ta bort WC1Handfat
+  ta bort WC1Dusch
+  byt namn WC1 till Sovrum3
+  rum Sovrum3: 260 H 160 H 95 V36.87 125? H36.87 65 H 235
+  fönster FönsterWC1: Sovrum3.6 slut 60, 75
+  dörr DörrWC1: Sovrum3.2 slut 5, 80, in, gångjärn slut      # 80 så att den går fri från sängen
+  möbel SängSovrum3: Sovrum3.6 slut 0, 90 x 200, säng      # kudden mot .6, i hörnet mot .1
+  rum Hall: 110 H 170 V 75 V 170 H 285 H 290 H 195 V 100 H 180 V 25 V 25 H 120 H 120 H 535
+    Hall.14 mot Sovrum1.2, start 0
+    kontroll Hall.14 mot Sovrum3.2, slut -15
+  WC2.4 mot Hall.8, start 10
+  Garderob1.4 mot Hall.12, start 0
+  dörr DörrGN: Hall.2 slut 10, 60, in, gångjärn slut, inredning
+  dörr Ytterdörr: Hall.13 start 0, 100, ut, gångjärn start
+  # som lager FastGarderobNere
+  ta bort GarderobSovrum1
+  ta bort DörrGarderobSovrum1
+  ta bort GarderobHall1
+  ta bort DörrGarderobHall1
+
+
+# WC2 tillsammans med Sovrum3_3: Sovrum3_3 ritar om Hall med nya väggnummer, så WC2:s
+# ändringar görs om här (gamla Hall.9 och .11 = nya .7 och .9). Följ med om Hall ändras i Sovrum3_3.
+lager WC2_Sovrum3_3 på Sovrum3_3, WC2
+  rum Hall: 110 H 170 V 75 V 170 H 285 H 290 H 295 V 100 H 80 V 25 V 25 H 120 H 120 H 535
+  WC2.6 mot Hall.8, start 10
 
 
 lager WC1 på Undervåning
@@ -594,14 +662,14 @@ function buildRoom(name, spec) {
 
 // ---------- tillstånd för en våning ----------
 function resolveFloor(plan, floor, act) {
-  const st = { rooms: new Map(), place: new Map(), checks: [], thick: new Map(), objs: new Map(), mods: new Map(), errors: [] };
+  const st = { rooms: new Map(), place: new Map(), checks: new Map(), thick: new Map(), objs: new Map(), mods: new Map(), errors: [] };
   const mark = (key, layer) => { if (!st.mods.has(key)) st.mods.set(key, []); st.mods.get(key).push(layer); };
   const layers = plan.layers.filter(l => act.has(l.name) && floorOf(plan, l.name) === floor);
   for (const l of layers) for (const op of l.ops) {
     const where = `Rad ${op.line}`;
     switch (op.t) {
       case "room": st.rooms.set(op.name, { spec: structuredClone(op.spec), layer: l.name }); mark("rum:" + op.name, l.name); break;
-      case "rel": if (op.check) st.checks.push(op); else { st.place.set(op.a, op); mark("plac:" + op.a, l.name); } break;
+      case "rel": if (op.check) st.checks.set(op.a + "|" + op.b, op); else { st.place.set(op.a, op); mark("plac:" + op.a, l.name); } break;
       case "thick": st.thick.set(`${op.room}.${op.k}`, op.val); mark(`tjock:${op.room}.${op.k}`, l.name); break;
       case "len": {
         const r = st.rooms.get(op.room);
@@ -616,7 +684,7 @@ function resolveFloor(plan, floor, act) {
         st.rooms.set(to, st.rooms.get(from)); st.rooms.delete(from);
         if (st.place.has(from)) { const r = st.place.get(from); st.place.delete(from); st.place.set(to, { ...r, a: to }); }
         for (const [k, r] of st.place) if (r.b === from) st.place.set(k, { ...r, b: to });
-        st.checks = st.checks.map(r => ({ ...r, a: r.a === from ? to : r.a, b: r.b === from ? to : r.b }));
+        st.checks = new Map([...st.checks.values()].map(r => ({ ...r, a: r.a === from ? to : r.a, b: r.b === from ? to : r.b })).map(r => [r.a + "|" + r.b, r]));
         for (const [k, v] of [...st.thick]) if (k.startsWith(from + ".")) { st.thick.delete(k); st.thick.set(to + k.slice(from.length), v); }
         for (const [k, o] of st.objs) if (o.room === from) st.objs.set(k, { ...o, room: to });
         mark("rum:" + from, l.name); mark("rum:" + to, l.name);
@@ -636,7 +704,8 @@ function resolveFloor(plan, floor, act) {
     let all = ls;
     if (key.startsWith("vägg:")) all = ls.concat(st.mods.get("rum:" + key.slice(5).split(".")[0]) || []);
     for (let a = 0; a < all.length; a++) for (let b = a + 1; b < all.length; b++)
-      if (!related(all[a], all[b])) conflicts.push(`Krock: ”${all[a]}” och ”${all[b]}” ändrar båda ${key.split(":")[1]}`);
+      if (!related(all[a], all[b]) && !all.some(z => anc.get(z).has(all[a]) && anc.get(z).has(all[b])))   // ett lager på båda löser krocken
+        conflicts.push(`Krock: ”${all[a]}” och ”${all[b]}” ändrar båda ${key.split(":")[1]}`);
   }
   st.conflicts = [...new Set(conflicts)];
   return st;
@@ -691,7 +760,7 @@ function placeRooms(st) {
     }
   }
   for (const A of R.values()) if (!A.g) notes.push(`${A.name} saknar placering`);
-  for (const rel of st.checks) {
+  for (const rel of st.checks.values()) {
     const A = R.get(rel.a), B = R.get(rel.b);
     if (!A?.g || !B?.g) continue;
     const g = solve(rel, A, B);
@@ -909,15 +978,14 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   let text = store.get("base", null) === EMBEDDED ? store.get("text", EMBEDDED) : EMBEDDED;
   let checked = new Set(store.get("checked", null) || []);
   let filters = Object.assign(Object.fromEntries(FILTERS.map(f => [f[0], f[2]])), store.get("filters", {}));
-  let plan, result = [], view = null, firstFit = true;
+  let plan, result = [], view = null, firstFit = true, defaultFloors = !store.get("checked", null);
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const S = p => `${p[0].toFixed(1)},${(-p[1]).toFixed(1)}`;           // planens y uppåt -> svg y nedåt
-  const hue = name => { let h = 0; for (const c of name) h = (h * 31 + c.codePointAt(0)) % 360; return h; };
 
   function compute() {
     plan = parsePlan(text);
-    if (!store.get("checked", null)) plan.layers.filter(l => !l.parents.length).forEach(l => checked.add(l.name));
+    if (defaultFloors) { defaultFloors = false; plan.layers.filter(l => !l.parents.length).forEach(l => checked.add(l.name)); }   // bara första gången
     const act = activeSet(plan, checked);
     const floors = plan.layers.filter(l => !l.parents.length && act.has(l.name)).map(l => l.name);
     result = floors.map(f => computeFloor(plan, f, act, window.polygonClipping));
@@ -999,7 +1067,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       const show = o => !isFurn(o) && filters[o.cat === "möbel" ? "möbler" : o.cat || "väggobjekt"];
       out.push(`<g class="${idx ? "upper" : ""}">`);
       out.push(`<path class="walls" fill-rule="evenodd" d="${f.walls.map(poly => poly.map(ring => "M" + ring.map(S).join("L") + "Z").join("")).join("")}"/>`);
-      for (const r of f.rooms) out.push(`<polygon class="room" style="--h:${hue(r.name)}" points="${r.g.map(S).join(" ")}"/>`);
+      for (const r of f.rooms) out.push(`<polygon class="room" points="${r.g.map(S).join(" ")}"/>`);
       if (!idx) out.push(gridSvg);
       for (const o of f.objs.filter(show)) {
         const G = o.geo;
