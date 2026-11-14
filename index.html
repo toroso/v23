@@ -149,7 +149,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 }
 #print svg { display: block; }
 #print .plan { margin: 0 auto; }
-#print footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; margin-top: 4mm; font: 9pt/1.35 "Archivo", Arial, sans-serif; }
+#print footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; margin-top: 4mm; font: 9pt/1.35 Arial, Helvetica, sans-serif; }
+#print text { font-family: Arial, Helvetica, sans-serif; text-rendering: geometricPrecision; }   /* webbtypsnitt blir fel i Windows utskrift */
+#print .wlabel { font-family: "Arial Narrow", Arial, sans-serif; }
 #print footer b { font-weight: 600; }
 #print footer small { color: #5b6672; font-size: 7.5pt; }
 @media print {
@@ -1198,8 +1200,8 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     const [x0, y0, x1, y1] = bounds(), pad = 15, w = x1 - x0 + 2 * pad, h = y1 - y0 + 2 * pad;   // cm
     const room = land => [(land ? A4[1] : A4[0]) - 2 * MARGIN, (land ? A4[0] : A4[1]) - 2 * MARGIN - FOOTER];
     let N = 1000, land = w > h;
-    for (const n of [50, 100, 200, 500]) {                    // största skalan som får plats, helst stående
-      const ok = [false, true].find(l => { const [pw, ph] = room(l); return w * 10 / n <= pw && h * 10 / n <= ph; });
+    for (const n of [50, 100, 200, 500]) {                    // största skalan som får plats; långsidan längs papperets långsida om det går
+      const ok = [w > h, w <= h].find(l => { const [pw, ph] = room(l); return w * 10 / n <= pw && h * 10 / n <= ph; });
       if (ok !== undefined) { N = n; land = ok; break; }
     }
     const ts = 0.021 * N, sw = 0.015 * N;                      // text ca 9 pt och linjer lika tjocka på papperet oavsett skala
