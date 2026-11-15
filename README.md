@@ -10,5 +10,6 @@ Interaktiv planritning över lägenheten (undervåning och ovanvåning) med lage
 - **Redigera plan**: ändra texten direkt i sidan. Ändringar sparas lokalt i webbläsaren.
 - **Skriv ut**: skriver ut allt som är valt under Lager och Visa på A4, i största skalan av 1:50, 1:100 och 1:200 som får plats, med skalstock.
 - **Kopiera bild**: lägger planen som PNG på urklipp.
+- **Bilder** (väljs i rubriken): originalplanen per våning; klicka på ett rum för att bläddra bland bilderna i `bilder/` (annonsens i `bilder/notar/`, egna i `bilder/egna/`).
 
 Formatet beskrivs överst i plantexten.

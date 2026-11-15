@@ -183,6 +183,47 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   font-size: .82rem; line-height: 1.45; font-weight: 400; box-shadow: 0 4px 14px rgba(0,0,0,.18);
 }
 .info:hover + .tip, .info:focus-visible + .tip, .info.open + .tip { display: block; }
+/* bilder: originalplanen med klickbara rum och en bildvisare */
+.gallery { position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: var(--paper); }
+.gallery[hidden] { display: none; }
+.gbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 16px 6px; }
+.gbar .sp { flex: 1; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 7px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: var(--panel); }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button.on { background: var(--accent); color: var(--panel); }
+.chip span, .bitem span { color: var(--muted); font-size: .8rem; margin-left: 6px; font-variant-numeric: tabular-nums; }
+#gplan { flex: 1; min-height: 0; width: 100%; display: block; }
+#gplan .walls { fill: var(--wall); }
+#gplan .groom polygon { fill: var(--paper); }
+#gplan .groom.has { cursor: pointer; }
+#gplan .groom.has:hover polygon, #gplan .groom.has:focus-visible polygon { fill: color-mix(in srgb, var(--accent) 14%, var(--paper)); }
+#gplan .groom:focus { outline: none; }
+#gplan .groom text { text-anchor: middle; fill: var(--muted); font-family: "Archivo", sans-serif; }
+#gplan .groom.has text { fill: var(--ink); font-weight: 600; }
+#gplan .groom.has text.gcount { fill: var(--accent); font-weight: 400; }
+.ghint { color: var(--muted); font-size: .85rem; padding: 0 16px 12px; }
+.blist { list-style: none; margin: 0; padding: 0; }
+.bitem { display: flex; justify-content: space-between; width: 100%; text-align: left; border: 0; background: transparent; padding: 5px 0; border-radius: 0; }
+.bitem:hover:not(:disabled) { color: var(--accent); }
+.bitem:disabled { color: var(--muted); cursor: default; }
+.viewer { position: absolute; inset: 0; z-index: 4; background: rgba(12,14,18,.94); color: #eef1f4; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.viewer[hidden] { display: none; }
+.viewer header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+.viewer header b { font-size: 1.05rem; }
+.viewer header .count { color: #aab3bd; font-variant-numeric: tabular-nums; }
+.viewer header .sp { flex: 1; }
+.viewer button { background: rgba(255,255,255,.08); color: #eef1f4; border-color: rgba(255,255,255,.18); }
+.vstage { position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 0 56px; touch-action: pan-y; }
+.vstage img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; user-select: none; }
+.vnav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 64px; padding: 0; font-size: 1.8rem; line-height: 1; }
+.vnav.prev { left: 8px; } .vnav.next { right: 8px; }
+.vcap { text-align: center; color: #aab3bd; font-size: .85rem; padding: 8px 14px 4px; }
+.vthumbs { display: flex; gap: 6px; overflow-x: auto; padding: 8px 14px 14px; }
+.vthumbs button { flex: none; padding: 0; border: 2px solid transparent; border-radius: 4px; background: none; line-height: 0; }
+.vthumbs button.on { border-color: #86a9e6; }
+.vthumbs img { width: 72px; height: 54px; object-fit: cover; border-radius: 2px; }
+@media (max-width: 760px) { .gallery { grid-row: 1; } .vstage { padding: 0 8px; } .vnav { display: none; } }
 /* utskrift: #print byggs vid beforeprint, i ljusa färger */
 #print {
   display: none; background: #fff; color: #1c2530;
@@ -206,7 +247,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 <body>
 <div class="app">
   <aside class="side">
-    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="kalkyl">Kalkyl</option></select></h1>
+    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option></select></h1>
     <div id="planSide">
       <h2>Lager</h2>
       <ul class="tree" id="layers"></ul>
@@ -226,6 +267,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
       <div class="themepick tiprow"><span class="lbl"><span id="lblRot">ROT-avdrag</span><button class="info" type="button" aria-label="Om ROT-avdrag" aria-describedby="tipRot">i</button>
         <span class="tip" role="tooltip" id="tipRot">30 % av arbetskostnaden dras direkt på fakturan, högst 50 000 kr per person och år (2026). Båda måste stå som ägare till bostadsrätten. Allt görs i mars–april, alltså samma år, så taket blir 100 000 kr för två. Material ger inget avdrag.</span></span>
         <select id="rot" aria-labelledby="lblRot"><option value="0">Inget</option><option value="1">1 person</option><option value="2">2 personer</option></select></div>
+    </div>
+    <div id="bilderSide" hidden>
+      <h2>Rum</h2>
+      <ul class="blist" id="bildRooms"></ul>
+      <h2>Utanför planen</h2>
+      <ul class="blist" id="bildExtra"></ul>
     </div>
     <label class="themepick">Utseende
       <select id="theme"><option value="light">Ljust</option><option value="dark">Mörkt</option><option value="system">Som systemet</option></select>
@@ -260,6 +307,21 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   <main class="sheet" id="sheet" hidden>
     <div class="sheetbar"><button id="printCalc" type="button">Skriv ut</button></div>
     <article class="calc" id="calc"></article>
+  </main>
+  <main class="gallery" id="gallery" hidden>
+    <div class="gbar"><div class="seg" id="gFloors" role="group" aria-label="Våning"></div><span class="sp"></span><span id="gExtra"></span></div>
+    <svg id="gplan" xmlns="http://www.w3.org/2000/svg" aria-label="Originalplan, klicka på ett rum för bilder"></svg>
+    <div class="ghint">Klicka på ett rum för att se bilder. Piltangenterna bläddrar.</div>
+    <section class="viewer" id="viewer" hidden aria-label="Bilder">
+      <header><b id="vTitle"></b><span class="count" id="vCount"></span><span class="sp"></span><button id="vClose" type="button">Stäng</button></header>
+      <div class="vstage" id="vStage">
+        <button class="vnav prev" id="vPrev" type="button" aria-label="Föregående bild">‹</button>
+        <img id="vImg" alt="">
+        <button class="vnav next" id="vNext" type="button" aria-label="Nästa bild">›</button>
+      </div>
+      <div class="vcap" id="vCap"></div>
+      <div class="vthumbs" id="vThumbs"></div>
+    </section>
   </main>
 </div>
 <div id="print" aria-hidden="true"></div>
@@ -1365,14 +1427,107 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape") for (const x of document.querySelectorAll(".info.open")) x.classList.remove("open"); });
 
-  let mode = store.get("view", "plan") === "kalkyl" ? "kalkyl" : "plan";
+  let mode = ["kalkyl", "bilder"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
   function setMode(m) {
     mode = m; store.set("view", m); $("mode").value = m;
-    const k = m === "kalkyl";
-    $("stage").hidden = k; $("planSide").hidden = k; $("planNotes").hidden = k;
+    const p = m === "plan", k = m === "kalkyl", b = m === "bilder";
+    $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p;
     $("sheet").hidden = !k; $("kalkylSide").hidden = !k;
-    if (!k && result.length) fit();                          // svg:n hade ingen storlek medan den var dold
+    $("gallery").hidden = !b; $("bilderSide").hidden = !b;
+    if (b) renderGallery(); else closeViewer();
+    if (p && result.length) fit();                           // svg:n hade ingen storlek medan den var dold
   }
+
+  // ---------- bilder: originalplanen, rum att klicka på och en bildvisare ----------
+  const nb = i => ({ src: `bilder/notar/notar-${String(i).padStart(2, "0")}.webp`, cap: "Mäklarens bild" });
+  const eb = t => ({ src: `bilder/egna/egen-${t}.jpg`, cap: `Egen bild, kl. ${t.slice(0, 2)}.${t.slice(2, 4)}` });
+  const BILDER = {                                            // rumsnamn som i planen
+    // undervåning
+    Hall: [nb(21), nb(22), eb("121541100"), eb("121546458"), eb("125000677"), eb("125821027")],
+    MasterBedroom: [nb(11), nb(12), eb("122529429"), eb("122534389")],
+    Sovrum2: [nb(14), eb("122558146"), eb("125809564"), eb("125814376")],
+    Sovrum1: [nb(13), eb("125732991"), eb("125736452")],
+    Matsal: [nb(3), nb(8), eb("125845672")],
+    Kök: [nb(7), nb(9), nb(10), eb("125838416")],
+    WC1: [nb(19), eb("122228752"), eb("124932083"), eb("124947067"), eb("130002797")],   // rosa bård, fönster, duschdraperi
+    WC2: [nb(20), eb("125751891"), eb("125755076")],          // blå bård
+    Balkong: [nb(4), nb(6), nb(26), nb(27)],
+    // ovanvåning
+    Vardagsrum: [nb(1), nb(2), eb("124242060"), eb("123224544"), eb("123232655"), eb("122756151"), eb("122801241"), eb("123236180"), eb("124346530")],
+    Sovrum4: [nb(17), nb(18), eb("123804498"), eb("123809516"), eb("123814954")],
+    Badrum: [nb(15), nb(16), eb("123927798"), eb("124030169")],
+  };
+  const EXTRA = {
+    Utsida: [nb(5), nb(23), nb(24)],
+    Trapphus: [eb("130115472"), eb("130116799"), eb("130126608")],
+    Osorterat: [eb("124621571"), eb("124634516"), eb("124641718")],   // golv, troligen ovanvåningen
+  };
+  const PLANBILD = {
+    Undervåning: { src: "bilder/notar/plan-entreplan.webp", cap: "Mäklarens planritning, entréplan" },
+    Ovanvåning: { src: "bilder/notar/plan-ovre.webp", cap: "Mäklarens planritning, övre plan" },
+  };
+  const catList = n => BILDER[n] || EXTRA[n] || (n === "Mäklarens ritning" ? [PLANBILD[gFloor]].filter(Boolean) : []);
+  let gFloor = store.get("bildFloor", "Undervåning"), vCat = null, vIdx = 0;
+
+  function renderGallery() {
+    const floors = plan.layers.filter(l => !l.parents.length).map(l => l.name);
+    if (!floors.includes(gFloor)) gFloor = floors[0];
+    if (!gFloor) return;
+    const F = computeFloor(plan, gFloor, new Set([gFloor]), window.polygonClipping);   // originalet, utan ändringslager
+    const n = name => catList(name).length;
+    $("gFloors").innerHTML = floors.map(f => `<button type="button" data-floor="${esc(f)}" class="${f === gFloor ? "on" : ""}" aria-pressed="${f === gFloor}">${esc(f)}</button>`).join("");
+    const extras = [...Object.keys(EXTRA), "Mäklarens ritning"];
+    $("gExtra").innerHTML = extras.map(e => `<button type="button" class="chip" data-cat="${esc(e)}" ${n(e) ? "" : "disabled"}>${esc(e)}<span>${n(e)}</span></button>`).join(" ");
+    const item = name => `<li><button type="button" class="bitem" data-cat="${esc(name)}" ${n(name) ? "" : "disabled"}>${esc(name)}<span>${n(name)}</span></button></li>`;
+    $("bildRooms").innerHTML = F.rooms.map(r => r.name).sort((a, b) => a.localeCompare(b, "sv")).map(item).join("");
+    $("bildExtra").innerHTML = extras.map(item).join("");
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const r of F.rooms) for (const p of r.g) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, -p[1]); y1 = Math.max(y1, -p[1]); }
+    const m = 40, fs = Math.max(x1 - x0, y1 - y0) / 42;
+    const out = [`<path class="walls" fill-rule="evenodd" d="${F.walls.map(poly => poly.map(ring => "M" + ring.map(S).join("L") + "Z").join("")).join("")}"/>`];
+    for (const r of F.rooms) {
+      const c = labelPoint(r.g), k = n(r.name);
+      out.push(`<g class="groom${k ? " has" : ""}" data-cat="${esc(r.name)}"${k ? ` tabindex="0" role="button" aria-label="${esc(r.name)}, ${k} bilder"` : ""}>` +
+        `<polygon points="${r.g.map(S).join(" ")}"/>` +
+        `<text x="${c[0].toFixed(1)}" y="${(-c[1]).toFixed(1)}" font-size="${fs.toFixed(1)}">${esc(r.name)}</text>` +
+        (k ? `<text class="gcount" x="${c[0].toFixed(1)}" y="${(-c[1] + fs * 1.15).toFixed(1)}" font-size="${(fs * .75).toFixed(1)}">${k} bilder</text>` : "") + `</g>`);
+    }
+    const svg = $("gplan");
+    svg.setAttribute("viewBox", `${x0 - m} ${y0 - m} ${x1 - x0 + 2 * m} ${y1 - y0 + 2 * m}`);
+    svg.innerHTML = out.join("");
+  }
+  function showImg() {
+    const list = catList(vCat), it = list[vIdx];
+    $("vTitle").textContent = vCat; $("vCount").textContent = `${vIdx + 1} / ${list.length}`;
+    $("vImg").src = it.src; $("vImg").alt = `${vCat}, bild ${vIdx + 1}`; $("vCap").textContent = it.cap;
+    $("vPrev").disabled = $("vNext").disabled = list.length < 2;
+    [...$("vThumbs").children].forEach((b, i) => b.classList.toggle("on", i === vIdx));
+    $("vThumbs").children[vIdx]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    for (const d of [-1, 1]) { const nx = list[(vIdx + d + list.length) % list.length]; if (nx) new Image().src = nx.src; }   // förladda grannarna
+  }
+  function openViewer(cat, i = 0) {
+    const list = catList(cat); if (!list.length) return;
+    vCat = cat; vIdx = i;
+    $("vThumbs").innerHTML = list.map((it, k) => `<button type="button" data-i="${k}" aria-label="Bild ${k + 1}"><img src="${esc(it.src)}" alt="" loading="lazy"></button>`).join("");
+    $("viewer").hidden = false; showImg(); $("vClose").focus();
+  }
+  function closeViewer() { if (!$("viewer").hidden) { $("viewer").hidden = true; $("vImg").removeAttribute("src"); } }
+  const step = d => { const L = catList(vCat).length; vIdx = (vIdx + d + L) % L; showImg(); };
+  const pick = e => { const t = e.target.closest("[data-cat]"); if (t && !t.disabled) openViewer(t.dataset.cat); };
+  $("gplan").addEventListener("click", pick);
+  $("gplan").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e); } });
+  $("gExtra").addEventListener("click", pick); $("bilderSide").addEventListener("click", pick);
+  $("gFloors").addEventListener("click", e => { const f = e.target.closest("[data-floor]")?.dataset.floor; if (f) { gFloor = f; store.set("bildFloor", f); closeViewer(); renderGallery(); } });
+  $("vPrev").onclick = () => step(-1); $("vNext").onclick = () => step(1); $("vClose").onclick = closeViewer;
+  $("vThumbs").addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) { vIdx = +b.dataset.i; showImg(); } });
+  document.addEventListener("keydown", e => {
+    if ($("viewer").hidden) return;
+    if (e.key === "ArrowLeft") step(-1); else if (e.key === "ArrowRight") step(1); else if (e.key === "Escape") closeViewer(); else return;
+    e.preventDefault();
+  });
+  let swipeX = null;                                          // svep på mobilen
+  $("vStage").addEventListener("pointerdown", e => { swipeX = e.clientX; });
+  $("vStage").addEventListener("pointerup", e => { if (swipeX !== null && Math.abs(e.clientX - swipeX) > 50) step(e.clientX < swipeX ? 1 : -1); swipeX = null; });
   $("mode").onchange = e => setMode(e.target.value);
 
   // ---------- utskrift: allt som är valt under Lager och Visa, A4, skala 1:50/1:100/1:200 ----------
