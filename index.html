@@ -418,6 +418,21 @@ lager WC2_Sovrum3_WC1 på Sovrum3_WC1, WC2
   WC2.6 mot Hall.8, start 10
 
 
+# Sovrum3 tas från nedre delen av MasterBedroom (som blir 285 högt). Bredvid blir H2 över,
+# mellan MasterBedroom och Hall. Dörren på MasterBedroom.3 går nu mot H2; mot Hall en öppning.
+lager Sovrum3_Ruff på Undervåning, alternativ Sovrum3
+  MasterBedroom.2 = 285
+  MasterBedroom.4 = 285
+  rum Sovrum3: 260 H 125 H 260 H 125
+    Sovrum3.1 mot MasterBedroom.3, slut 0
+  rum H2: 110 H 125 H 110 H 125
+    H2.1 mot MasterBedroom.3, start 0
+  Sovrum1.1 mot Sovrum3.3, slut 0
+  öppning ÖppningHallH2: H2.3 start 10, 90      # där dörren till MasterBedroom satt
+  skjutdörr SkjutdörrSovrum3: Sovrum3.2 start 0, 125      # mot H2.4, hela väggen
+  möbel SängSovrum3: Sovrum3.4 mitt, 120 x 200, säng      # kudden mot .4
+
+
 lager WC1 på Undervåning
   ta bort WC1Toalett
   ta bort WC1Handfat
