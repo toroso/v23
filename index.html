@@ -239,6 +239,30 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .vthumbs button.on { border-color: #86a9e6; }
 .vthumbs img { width: 72px; height: 54px; object-fit: cover; border-radius: 2px; }
 @media (max-width: 760px) { .gallery { grid-row: 1; } .vstage { padding: 0 8px; } .vnav { display: none; } }
+/* dokument: lista i sidopanelen, dokumentet i stora ytan */
+.docs { display: flex; flex-direction: column; min-height: 0; overflow: hidden; background: var(--paper); }
+.docs[hidden] { display: none; }
+.dbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.dbar b { font-size: 1.05rem; margin-right: 10px; }
+.dbar small { color: var(--muted); font-size: .85rem; }
+.dbar .sp { flex: 1; }
+a.btn { font-size: .9rem; font-weight: 500; color: var(--ink); text-decoration: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 13px; }
+a.btn:hover { border-color: var(--muted); }
+a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a.btn[hidden] { display: none; }
+.dbody { flex: 1; min-height: 0; overflow: auto; }
+.dbody iframe { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+.dbody.text { padding: 28px 32px 48px; }
+.dimgs { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 16px 48px; }
+.dimgs figure { margin: 0; max-width: 100%; }
+.dimgs img { display: block; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); }
+.dimgs figcaption { color: var(--muted); font-size: .85rem; margin-top: 6px; }
+.ditem { display: block; width: 100%; text-align: left; border: 0; border-left: 3px solid transparent; border-radius: 0; background: transparent; padding: 6px 0 6px 9px; margin-left: -12px; }
+.ditem small { display: block; color: var(--muted); font-size: .8rem; font-weight: 400; }
+.ditem:hover { color: var(--accent); }
+.ditem.on { border-left-color: var(--accent); color: var(--accent); font-weight: 600; }
+.calc td.yr { white-space: nowrap; }
+@media (max-width: 760px) { .docs { grid-row: 1; } .dbody.text { padding: 16px 16px 32px; } }
 /* utskrift: #print byggs vid beforeprint, i ljusa färger */
 #print {
   display: none; background: #fff; color: #1c2530;
@@ -262,7 +286,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 <body>
 <div class="app">
   <aside class="side">
-    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option></select></h1>
+    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option><option value="dokument">Dokument</option></select></h1>
     <div id="planSide">
       <h2>Lager</h2>
       <ul class="tree" id="layers"></ul>
@@ -288,6 +312,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
       <h2>Utanför planen</h2>
       <ul class="blist" id="bildExtra"></ul>
     </div>
+    <div id="dokSide" hidden></div>
     <label class="themepick">Utseende
       <select id="theme"><option value="light">Ljust</option><option value="dark">Mörkt</option><option value="system">Som systemet</option></select>
     </label>
@@ -336,6 +361,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
       <div class="vcap" id="vCap"></div>
       <div class="vthumbs" id="vThumbs"></div>
     </section>
+  </main>
+  <main class="docs" id="docs" hidden>
+    <div class="dbar"><div><b id="dTitle"></b><small id="dSub"></small></div><span class="sp"></span><a class="btn" id="dOpen" target="_blank" rel="noopener">Öppna i ny flik</a><a class="btn" id="dDown" download>Ladda ner</a></div>
+    <div class="dbody" id="dBody"></div>
   </main>
 </div>
 <div id="print" aria-hidden="true"></div>
@@ -1548,14 +1577,16 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape") for (const x of document.querySelectorAll(".info.open")) x.classList.remove("open"); });
 
-  let mode = ["kalkyl", "bilder"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
+  let mode = ["kalkyl", "bilder", "dokument"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
   function setMode(m) {
     mode = m; store.set("view", m); $("mode").value = m;
-    const p = m === "plan", k = m === "kalkyl", b = m === "bilder";
+    const p = m === "plan", k = m === "kalkyl", b = m === "bilder", d = m === "dokument";
     $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p;
     $("sheet").hidden = !k; $("kalkylSide").hidden = !k;
     $("gallery").hidden = !b; $("bilderSide").hidden = !b;
+    $("docs").hidden = !d; $("dokSide").hidden = !d;
     if (b) renderGallery(); else closeViewer();
+    if (d) renderDocs();
     if (p && result.length) fit();                           // svg:n hade ingen storlek medan den var dold
   }
 
@@ -1658,9 +1689,86 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   $("vStage").addEventListener("pointerup", e => { if (swipeX !== null && Math.abs(e.clientX - swipeX) > 50) step(e.clientX < swipeX ? 1 : -1); swipeX = null; });
   $("mode").onchange = e => setMode(e.target.value);
 
+  // ---------- dokument: mäklarens PDF:er, planritningarna och föreningens underhållsplan ----------
+  // Underhållsplanen kommer från föreningens kalkylark: [senast genomfört, vad, intervall, planerat år, uppskattad kostnad]
+  const UNDERHALL = [
+    ["Genomfört", [
+      [1995, "Vatten- och avloppsstammar", "50–60 år"],
+      [2000, "Byte av elstigar och elcentraler", "30–50 år"],
+      [2008, "Nytt (ytter?-)tak", "25–50 år"],
+      [2008, "Nya fönster", "20–25 år"],
+      [2008, "Ny fasadmålning", "5–50 år"],
+      [2009, "Målning av trapphus", "5–50 år"],
+      [2017, "Avstängning av gas till flera lägenheter", "–", "", 6000],
+      [2017, "Ny elcentral in till huset", "30–50 år", "", 26000],
+      [2017, "Ny tvättmaskin", "10–15 år", "", 14000],
+      [2018, "Ny stenläggning på gårdsplan samt ny stentrappa", "50–100 år", "", 240000],
+      [2020, "Porten ommålad", "5–50 år", "", 0],
+      [2020, "Två värmeväxlare till övervåningen", "20 år", "", 60000],
+      [2022, "Fiber till huset och alla lägenheter", "50 år", "", 63000]]],
+    ["Underhållsförslag", [
+      ["", "Underhåll av fönster", "1–5 år", 2029, 300000],
+      ["", "Tvättstuga (maskiner)", "10–15 år", 2030, 20000],
+      ["", "Golv och innerväggar i gemensamma utrymmen", "10–25 år", 2034],
+      ["", "Värmeväxlare", "20 år", 2035, 100000],
+      ["", "Fasadmålning", "5–50 år", 2038],
+      ["", "Radiatorer", "50–100 år", 2040],
+      ["", "El", "30–50 år", 2050],
+      ["", "Stenläggning", "50–100 år", 2060],
+      ["", "Taksäkerhet", "30–40 år", 2060]]],
+    ["Utökningsförslag", [
+      ["", "Batterier för att lagra el (30 kWh)", "", "", 280000],
+      ["", "Värmeväxlare för avlopp"],
+      ["", "Installation för laddning av elbilar"]]],
+    ["Ej relevanta underhåll", [
+      ["", "Ventilationsfläktar (har inte ventilation)", "20–30 år"],
+      ["", "Balkonger (bekostas av lägenhetsägarna själva)", "20–40 år"]]],
+  ];
+  const kr = n => n == null ? "" : n.toLocaleString("sv-SE") + " kr";
+  const underhallHtml = () => `<h2>Underhållsplan, Brf Framnäs 10</h2>
+    <p class="lede">Föreningens plan: vad som är gjort, när det är tänkt att göras igen och uppskattad kostnad där den finns.</p>
+    <table><thead><tr><th>Senast</th><th>Vad</th><th>Intervall</th><th>Planerat</th><th class="num">Kostnad</th></tr></thead>
+    <tbody>${UNDERHALL.map(([g, rows]) => `<tr class="group"><th colspan="5">${esc(g)}</th></tr>` + rows.map(([a, v, i = "", pl = "", c]) =>
+      `<tr><td class="yr">${a}</td><td>${esc(v)}</td><td class="yr">${esc(i)}</td><td class="yr">${pl}</td><td class="num">${kr(c)}</td></tr>`).join("")).join("")}</tbody></table>`;
+
+  const DOKUMENT = [
+    { grupp: "Lägenheten", id: "beskrivning", namn: "Bostadsbeskrivning", sub: "Mäklarens, kontrollerad september 2026", fil: "dokument/bostadsbeskrivning.pdf" },
+    { grupp: "Lägenheten", id: "beskrivning-tidigare", namn: "Bostadsbeskrivning, tidigare version", sub: "Utan pris och nyare uppgifter", fil: "dokument/bostadsbeskrivning-tidigare.pdf" },
+    { grupp: "Lägenheten", id: "matbevis", namn: "Mätbevis", sub: "142 m² boarea, 23 september 2026", fil: "dokument/matbevis.pdf" },
+    { grupp: "Lägenheten", id: "ritningar", namn: "Planritningar", sub: "Mäklarens, båda våningarna", bilder: [["bilder/notar/plan-entreplan.webp", "Entréplan"], ["bilder/notar/plan-ovre.webp", "Övre plan"]] },
+    { grupp: "Föreningen", id: "arsredovisning", namn: "Årsredovisning 2025", sub: "Brf Framnäs 10", fil: "dokument/arsredovisning-2025.pdf" },
+    { grupp: "Föreningen", id: "underhall", namn: "Underhållsplan", sub: "Genomfört, planerat och förslag", fil: "dokument/underhallsplan.xlsx", html: underhallHtml },
+    { grupp: "Föreningen", id: "stadgar", namn: "Stadgar", sub: "Antagna 15 januari 2018", fil: "dokument/stadgar.pdf" },
+    { grupp: "Föreningen", id: "energi", namn: "Energideklaration", sub: "Giltig till 28 oktober 2032", fil: "dokument/energideklaration.pdf" },
+  ];
+  let dokId = DOKUMENT.some(d => d.id === store.get("dok")) ? store.get("dok") : DOKUMENT[0].id;
+  function renderDocs() {
+    const doc = DOKUMENT.find(d => d.id === dokId);
+    $("dokSide").innerHTML = [...new Set(DOKUMENT.map(d => d.grupp))].map(g => `<h2>${esc(g)}</h2>` +
+      DOKUMENT.filter(d => d.grupp === g).map(d => `<button type="button" class="ditem${d === doc ? " on" : ""}" data-dok="${d.id}"${d === doc ? ' aria-current="true"' : ""}>${esc(d.namn)}<small>${esc(d.sub)}</small></button>`).join("")).join("");
+    $("dTitle").textContent = doc.namn; $("dSub").textContent = doc.sub;
+    const link = doc.fil || doc.bilder[0][0];
+    $("dOpen").hidden = !!doc.html || !!doc.bilder; $("dOpen").href = link;
+    $("dDown").hidden = !doc.fil; $("dDown").href = link; $("dDown").textContent = doc.html ? "Ladda ner kalkylark" : "Ladda ner";
+    const body = $("dBody"); body.className = "dbody" + (doc.html ? " text" : "");
+    body.innerHTML = doc.html ? `<article class="calc">${doc.html()}</article>`
+      : doc.bilder ? `<div class="dimgs">${doc.bilder.map(([src, cap]) => `<figure><img src="${src}" alt="${esc(cap)}"><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`
+      : `<iframe src="${doc.fil}#view=FitH" title="${esc(doc.namn)}"></iframe>`;
+  }
+  $("dokSide").addEventListener("click", e => { const b = e.target.closest("[data-dok]"); if (b) { dokId = b.dataset.dok; store.set("dok", dokId); renderDocs(); } });
+
   // ---------- utskrift: allt som är valt under Lager och Visa, A4, skala 1:50/1:100/1:200 ----------
   const A4 = [210, 297], MARGIN = 10, FOOTER = 18;            // mm
   function buildPrint() {
+    if (mode === "dokument") {
+      const doc = DOKUMENT.find(d => d.id === dokId);
+      let ps = $("printstyle");
+      if (!ps) { ps = document.createElement("style"); ps.id = "printstyle"; document.head.appendChild(ps); }
+      ps.textContent = "@page { size: A4 portrait; margin: 14mm; } #print .calc { max-width: none; font: 9.5pt/1.4 Arial, Helvetica, sans-serif; }";
+      $("print").innerHTML = `<article class="calc">${doc.html ? doc.html()
+        : `<h2>Dokument</h2><table><tbody>${DOKUMENT.map(d => `<tr><td>${esc(d.namn)}</td><td>${esc(d.sub)}</td><td>${esc(d.fil || "")}</td></tr>`).join("")}</tbody></table>`}</article>`;
+      return;
+    }
     if (mode === "kalkyl") {                                   // kalkylen som den syns, stående A4
       let ps = $("printstyle");
       if (!ps) { ps = document.createElement("style"); ps.id = "printstyle"; document.head.appendChild(ps); }
