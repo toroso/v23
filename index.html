@@ -269,8 +269,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
         <select id="rot" aria-labelledby="lblRot"><option value="0">Inget</option><option value="1">1 person</option><option value="2">2 personer</option></select></div>
     </div>
     <div id="bilderSide" hidden>
-      <h2>Rum</h2>
-      <ul class="blist" id="bildRooms"></ul>
+      <div id="bildRooms"></div>
       <h2>Utanför planen</h2>
       <ul class="blist" id="bildExtra"></ul>
     </div>
@@ -1445,8 +1444,8 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     // undervåning
     Hall: [nb(21), nb(22), eb("121541100"), eb("121546458"), eb("125000677"), eb("125821027")],
     MasterBedroom: [nb(11), nb(12), eb("122529429"), eb("122534389")],
-    Sovrum2: [nb(14), eb("122558146"), eb("125809564"), eb("125814376")],
-    Sovrum1: [nb(13), eb("125732991"), eb("125736452")],
+    Sovrum1: [nb(14), eb("122558146"), eb("125809564"), eb("125814376")],
+    Sovrum2: [nb(13), eb("125732991"), eb("125736452")],
     Matsal: [nb(3), nb(8), eb("125845672")],
     Kök: [nb(7), nb(9), nb(10), eb("125838416")],
     WC1: [nb(19), eb("122228752"), eb("124932083"), eb("124947067"), eb("130002797")],   // rosa bård, fönster, duschdraperi
@@ -1479,7 +1478,10 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     const extras = [...Object.keys(EXTRA), "Mäklarens ritning"];
     $("gExtra").innerHTML = extras.map(e => `<button type="button" class="chip" data-cat="${esc(e)}" ${n(e) ? "" : "disabled"}>${esc(e)}<span>${n(e)}</span></button>`).join(" ");
     const item = name => `<li><button type="button" class="bitem" data-cat="${esc(name)}" ${n(name) ? "" : "disabled"}>${esc(name)}<span>${n(name)}</span></button></li>`;
-    $("bildRooms").innerHTML = F.rooms.map(r => r.name).sort((a, b) => a.localeCompare(b, "sv")).map(item).join("");
+    $("bildRooms").innerHTML = floors.map(f => {                // alla våningars rum; ett klick byter våning i planen
+      const names = (f === gFloor ? F : computeFloor(plan, f, new Set([f]), window.polygonClipping)).rooms.map(r => r.name).sort((a, b) => a.localeCompare(b, "sv"));
+      return `<h2>${esc(f)}</h2><ul class="blist">${names.map(item).join("").replaceAll('class="bitem"', `class="bitem" data-floor="${esc(f)}"`)}</ul>`;
+    }).join("");
     $("bildExtra").innerHTML = extras.map(item).join("");
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const r of F.rooms) for (const p of r.g) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, -p[1]); y1 = Math.max(y1, -p[1]); }
@@ -1513,7 +1515,11 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   }
   function closeViewer() { if (!$("viewer").hidden) { $("viewer").hidden = true; $("vImg").removeAttribute("src"); } }
   const step = d => { const L = catList(vCat).length; vIdx = (vIdx + d + L) % L; showImg(); };
-  const pick = e => { const t = e.target.closest("[data-cat]"); if (t && !t.disabled) openViewer(t.dataset.cat); };
+  const pick = e => {
+    const t = e.target.closest("[data-cat]"); if (!t || t.disabled) return;
+    if (t.dataset.floor && t.dataset.floor !== gFloor) { gFloor = t.dataset.floor; store.set("bildFloor", gFloor); renderGallery(); }
+    openViewer(t.dataset.cat);
+  };
   $("gplan").addEventListener("click", pick);
   $("gplan").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(e); } });
   $("gExtra").addEventListener("click", pick); $("bilderSide").addEventListener("click", pick);
