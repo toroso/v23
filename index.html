@@ -136,10 +136,53 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
   .app { grid-template-columns: 1fr; grid-template-rows: 62% minmax(0, 1fr); }
   .stage { grid-row: 1; }
   .side { grid-row: 2; border-right: 0; border-top: 1px solid var(--rule); padding: 14px 16px 24px; }
-  h1 { display: none; }
+  h1 { margin: 0 0 4px; font-size: 1.1rem; }
   h2 { margin-top: 14px; }
+  .sheet { grid-row: 1; padding: 16px 16px 32px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* vyväljare och kalkyl */
+.viewpick select { font: inherit; color: var(--ink); background: transparent; border: 0; padding: 0 4px 0 0; margin: 0; cursor: pointer; }
+.viewpick select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.sheet { overflow-y: auto; background: var(--paper); padding: 28px 32px 48px; }
+.sheet[hidden] { display: none; }
+.sheetbar { max-width: 860px; margin: 0 auto 8px; display: flex; justify-content: flex-end; }
+.calc { max-width: 860px; margin: 0 auto; color: var(--ink); }
+.calc h2 { font-size: 1.35rem; margin: 0 0 6px; }
+.calc h3 { font-size: 1rem; font-weight: 600; margin: 28px 0 8px; }
+.calc .lede { color: var(--muted); margin: 0 0 18px; max-width: 64ch; }
+.calc .kpis { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 20px; }
+.calc .kpi { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 16px; min-width: 150px; flex: 1; }
+.calc .kpi span { display: block; color: var(--muted); font-size: .82rem; }
+.calc .kpi b { font-size: 1.45rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.calc table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--rule); font-variant-numeric: tabular-nums; }
+.calc th, .calc td { padding: 9px 12px; text-align: left; vertical-align: top; border-top: 1px solid var(--rule); }
+.calc thead th { border-top: 0; font-size: .82rem; font-weight: 600; color: var(--muted); }
+.calc .num { text-align: right; white-space: nowrap; width: 5.5em; }
+.calc td small { display: block; color: var(--muted); font-size: .82rem; margin-top: 2px; }
+.calc tr.group th { background: var(--paper); font-size: .82rem; font-weight: 600; color: var(--muted); }
+.calc tr.sum td { font-weight: 600; }
+.calc tr.minus td { color: var(--accent); }
+.calc tr.net td { font-weight: 700; font-size: 1.05rem; border-top: 2px solid var(--ink); }
+.calc ul.notes { margin: 0; padding-left: 20px; }
+.calc ul.notes li { margin: 4px 0; }
+.calc .src { color: var(--muted); font-size: .82rem; margin-top: 24px; }
+#kalkylSide .opt small { display: block; }
+/* (i)-knapp med förklaring, visas vid hovring och fokus */
+.tiprow { position: relative; display: flex; align-items: baseline; gap: 8px; }
+.tiprow > .opt, .tiprow > .themepick { flex: 1; min-width: 0; }
+.themepick .lbl { display: flex; align-items: center; gap: 8px; }
+.info {
+  flex: none; width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1px solid var(--muted);
+  background: transparent; color: var(--muted); font: italic 600 11px/16px Georgia, "Times New Roman", serif; cursor: help;
+}
+.info:hover, .info:focus-visible { border-color: var(--accent); color: var(--accent); }
+.tip {
+  display: none; position: absolute; left: 0; right: 0; top: calc(100% + 2px); z-index: 5;
+  background: var(--ink); color: var(--panel); padding: 9px 11px; border-radius: 6px;
+  font-size: .82rem; line-height: 1.45; font-weight: 400; box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+.info:hover + .tip, .info:focus-visible + .tip, .info.open + .tip { display: block; }
 /* utskrift: #print byggs vid beforeprint, i ljusa färger */
 #print {
   display: none; background: #fff; color: #1c2530;
@@ -163,16 +206,34 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 <body>
 <div class="app">
   <aside class="side">
-    <h1>Planlösning</h1>
-    <h2>Lager</h2>
-    <ul class="tree" id="layers"></ul>
-    <h2>Visa</h2>
-    <div id="filters"></div>
+    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="kalkyl">Kalkyl</option></select></h1>
+    <div id="planSide">
+      <h2>Lager</h2>
+      <ul class="tree" id="layers"></ul>
+      <h2>Visa</h2>
+      <div id="filters"></div>
+    </div>
+    <div id="kalkylSide" hidden>
+      <h2>Tillval</h2>
+      <div id="tillval"></div>
+      <h2>Påslag och avdrag</h2>
+      <div class="themepick tiprow"><span class="lbl"><span id="lblBuffert">Buffert</span><button class="info" type="button" aria-label="Om buffert" aria-describedby="tipBuffert">i</button>
+        <span class="tip" role="tooltip" id="tipBuffert">Pengar för sådant som dyker upp när väggar och golv öppnas: dålig puts bakom kaklet, rör som måste dras längre, ett skadat tätskikt under badkaret. I en lägenhet från 1938 är 15 % rimligt. Med fasta offerter räcker mindre.</span></span>
+        <select id="buffert" aria-labelledby="lblBuffert"><option value="0">0 %</option><option value="10">10 %</option><option value="15">15 %</option><option value="20">20 %</option></select></div>
+      <div class="themepick tiprow"><span class="lbl"><span id="lblGe">Samordnande entreprenör</span><button class="info" type="button" aria-label="Om samordnande entreprenör" aria-describedby="tipGe">i</button>
+        <span class="tip" role="tooltip" id="tipGe">Med en samordnande entreprenör har ni en enda kontakt som planerar alla hantverkare och ansvarar för att jobben passar ihop. Det kostar ofta 10–15 %. Utan den samordnar ni själva: lägre pris, men fler kontakter och större risk för väntan mellan jobben. Eftersom ni inte gör något själva och allt ska rymmas i mars–april kan påslaget vara värt det.</span></span>
+        <select id="ge" aria-labelledby="lblGe"><option value="0">Nej</option><option value="10">10 %</option><option value="15">15 %</option></select></div>
+      <div class="themepick tiprow"><span class="lbl"><span id="lblRot">ROT-avdrag</span><button class="info" type="button" aria-label="Om ROT-avdrag" aria-describedby="tipRot">i</button>
+        <span class="tip" role="tooltip" id="tipRot">30 % av arbetskostnaden dras direkt på fakturan, högst 50 000 kr per person och år (2026). Båda måste stå som ägare till bostadsrätten. Allt görs i mars–april, alltså samma år, så taket blir 100 000 kr för två. Material ger inget avdrag.</span></span>
+        <select id="rot" aria-labelledby="lblRot"><option value="0">Inget</option><option value="1">1 person</option><option value="2">2 personer</option></select></div>
+    </div>
     <label class="themepick">Utseende
       <select id="theme"><option value="light">Ljust</option><option value="dark">Mörkt</option><option value="system">Som systemet</option></select>
     </label>
-    <h2>Meddelanden</h2>
-    <ul id="notes"></ul>
+    <div id="planNotes">
+      <h2>Meddelanden</h2>
+      <ul id="notes"></ul>
+    </div>
   </aside>
   <main class="stage" id="stage">
     <div class="toolbar">
@@ -195,6 +256,10 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
         <span class="hint" id="edHint">Ctrl + Enter ritar om</span>
       </div>
     </section>
+  </main>
+  <main class="sheet" id="sheet" hidden>
+    <div class="sheetbar"><button id="printCalc" type="button">Skriv ut</button></div>
+    <article class="calc" id="calc"></article>
   </main>
 </div>
 <div id="print" aria-hidden="true"></div>
@@ -1208,9 +1273,118 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   applyTheme(theme); $("theme").value = theme;
   $("theme").onchange = e => { store.set("theme", e.target.value); applyTheme(e.target.value); };
 
+  // ---------- kalkyl: tkr inkl. moms, före ROT. arbete = arbetets andel (för ROT) ----------
+  const POSTER = [
+    { namn: "WC2, nytt våtrum", text: "Rivning, väggar och dörr flyttas, rör och golvbrunn flyttas, tätskikt, elgolvvärme, kakel och klinker, dusch och handfat, toaletten sätts tillbaka, fläkt, våtrumsintyg", lag: 200, hog: 290, arbete: .6 },
+    { namn: "Målning", text: "Väggar och tak i alla torra rum (ca 480 m², balkarna uppe målas inte), spackling, dörrar, foder och lister", lag: 120, hog: 200, arbete: .8 },
+    { namn: "WC1 blir garderob", text: "Kakel och porslin rivs, ledningar proppas vid stammen, revisionslucka, väggarna gipsas, parkett", lag: 45, hog: 75, arbete: .7 },
+    { namn: "Kök", text: "Halva väggen mot Matsal rivs ovanför bänkskivan och balken förlängs, bardisk i trä 120 × 80 på befintliga skåp, nytt kakel 3,3 m², ny fläkt", lag: 47, hog: 89, arbete: .6 },
+    { namn: "Badrummet uppe", text: "Vanligt badkar med front, tvättställ med kommod, tvättmaskin och torktumlare, installation", lag: 45, hog: 85, arbete: .4 },
+    { namn: "Sovrum3 (Sovrum3_Ruff)", text: "Ny vägg ovanpå parketten med ventilationsspringa, ny dörr till MasterBedroom, skjutdörr 125 cm, gamla dörren mot H2 krokas av", lag: 35, hog: 60, arbete: .6 },
+    { namn: "El", text: "Golvvärme och fläkt i WC2, köksfläkt, uttag och ljus i Sovrum3, H2 och garderoben", lag: 25, hog: 45, arbete: .7 },
+    { namn: "Garderoberna i Sovrum1", text: "Garderoberna rivs, hålet i Sovrum1.2 lagas, parketten lagas", lag: 12, hog: 24, arbete: .75 },
+    { namn: "Sovrum2", text: "Plastmattan rivs, eventuell avjämning, parkett och lister (11 m²)", lag: 12, hog: 24, arbete: .5 },
+    { namn: "Gemensamt", text: "Skydd, bortforsling (2,3 tr utan hiss), slutstädning", lag: 15, hog: 28, arbete: .8 },
+  ];
+  const TILLVAL = [
+    { id: "kok3", namn: "Ny träskiva längs Kök.3", text: "Inklusive urtag och montering", lag: 16, hog: 26, arbete: .4,
+      info: "I grundkalkylen får bara bardisken ny träskiva. Med det här valet får även bänken längs Kök.3 samma skiva, så att köket ser enhetligt ut. Diskhon lyfts ur och sätts tillbaka, och kaklet byts ändå." },
+    { id: "vitvaror", namn: "Nya vitvaror", text: "Fristående kyl, frys, diskmaskin och spis med ugn", lag: 30, hog: 55, arbete: .1,
+      info: "Grundkalkylen behåller dagens vitvaror. Välj om de är gamla eller om ni vill ha nytt: fristående kyl, frys, diskmaskin och spis med ugn i mellanklass, inklusive installation och bortforsling. Nästan allt är material, så ROT påverkas knappt." },
+    { id: "ho", namn: "Ny diskho och blandare", text: "", lag: 7, hog: 14, arbete: .4,
+      info: "Behåll eller byt diskho och blandare. Passar bäst ihop med ny skiva längs Kök.3, eftersom hon då ändå lyfts ur och anslutningarna görs om." },
+    { id: "sten", namn: "Stenplattor i WC1", text: "I stället för parkett", lag: 3, hog: 6, arbete: .6,
+      info: "Klinkern rivs ändå. Parkett ger samma golv som i resten av lägenheten. Stenplattor tål mer och gör det enklare att göra om rummet till våtrum igen, men kräver ett jämnt underlag och blir lite dyrare." },
+    { id: "golvS1", namn: "Nytt golv i hela Sovrum1", text: "I stället för lagning", lag: 9, hog: 15, arbete: .5,
+      info: "Där garderoberna stått saknas troligen parkett. En lagning med liknande parkett syns ofta, särskilt i gammalt golv som mörknat. Nytt golv i hela rummet ger ett jämnt resultat, men kostar mer." },
+  ];
+  const ROT_ANDEL = .3, ROT_TAK = 50;                          // 2026: 30 % av arbetet, högst 50 tkr per person och år
+  let calc = Object.assign({ tillval: [], buffert: 15, ge: 0, rot: 2 }, store.get("kalkyl", {}));
+  const tkr = v => Math.round(v).toLocaleString("sv-SE");
+  function calcTotals(k) {                                      // k = "lag" eller "hog"
+    const valda = TILLVAL.filter(t => calc.tillval.includes(t.id));
+    const bas = POSTER.reduce((s, p) => s + p[k], 0), tv = valda.reduce((s, t) => s + t[k], 0);
+    const ge = (bas + tv) * calc.ge / 100, buf = (bas + tv + ge) * calc.buffert / 100;
+    const arbete = [...POSTER, ...valda].reduce((s, p) => s + p[k] * p.arbete, 0);
+    const rot = Math.min(arbete * ROT_ANDEL, ROT_TAK * calc.rot);
+    return { bas, tv, ge, buf, arbete, rot, netto: bas + tv + ge + buf - rot };
+  }
+  function renderTillval() {
+    $("tillval").innerHTML = TILLVAL.map(t => `<div class="tiprow"><label class="opt"><input type="checkbox" data-tillval="${t.id}" ${calc.tillval.includes(t.id) ? "checked" : ""}>
+      <span>${esc(t.namn)}<small>+${tkr(t.lag)}–${tkr(t.hog)} tkr</small></span></label>` +
+      (t.info ? `<button class="info" type="button" aria-label="Om ${esc(t.namn)}" aria-describedby="tip-${t.id}">i</button><span class="tip" role="tooltip" id="tip-${t.id}">${esc(t.info)}</span>` : "") +
+      `</div>`).join("");
+    $("buffert").value = calc.buffert; $("ge").value = calc.ge; $("rot").value = calc.rot;
+  }
+  function renderCalc() {
+    const L = calcTotals("lag"), H = calcTotals("hog"), valda = TILLVAL.filter(t => calc.tillval.includes(t.id));
+    const row = (namn, text, l, h, cls = "") => `<tr class="${cls}"><td>${esc(namn)}${text ? `<small>${esc(text)}</small>` : ""}</td><td class="num">${tkr(l)}</td><td class="num">${tkr(h)}</td></tr>`;
+    const rows = POSTER.map(p => row(p.namn, p.text, p.lag, p.hog));
+    if (valda.length) rows.push(`<tr class="group"><th colspan="3">Tillval</th></tr>`, ...valda.map(t => row(t.namn, t.text, t.lag, t.hog)));
+    rows.push(row("Summa", "", L.bas + L.tv, H.bas + H.tv, "sum"));
+    if (calc.ge) rows.push(row(`Samordnande entreprenör ${calc.ge} %`, "", L.ge, H.ge));
+    if (calc.buffert) rows.push(row(`Buffert ${calc.buffert} %`, "", L.buf, H.buf));
+    if (calc.rot) rows.push(row(`ROT-avdrag, ${calc.rot} ${calc.rot > 1 ? "personer" : "person"}`,
+      `30 % av arbetet (${tkr(L.arbete)}–${tkr(H.arbete)} tkr), högst ${tkr(ROT_TAK * calc.rot)} tkr per år`, -L.rot, -H.rot, "minus"));
+    rows.push(row("Netto", "", L.netto, H.netto, "net"));
+    $("calc").innerHTML = `<h2>Renoveringskalkyl</h2>
+      <p class="lede">Grov uppskattning för Vasavägen 23 i mellanstandard, Stockholm 2026. Allt i tusen kronor inklusive moms. Hantverkare gör allt och lägenheten är tom under arbetet. Bygger på prisnivåer, inte på offerter.</p>
+      <div class="kpis"><div class="kpi"><span>Netto efter ROT</span><b>${tkr(L.netto)}–${tkr(H.netto)} tkr</b></div>
+        <div class="kpi"><span>Före ROT</span><b>${tkr(L.netto + L.rot)}–${tkr(H.netto + H.rot)} tkr</b></div>
+        <div class="kpi"><span>Varav arbete</span><b>${tkr(L.arbete)}–${tkr(H.arbete)} tkr</b></div></div>
+      <table><thead><tr><th>Post</th><th class="num">Låg</th><th class="num">Hög</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+      <h3>Förutsättningar</h3>
+      <ul class="notes">
+        <li>Lager: WC2, Kök, WC1, FastGarderobNere och Sovrum3_Ruff. Mängderna är tagna ur planritningen.</li>
+        <li>Våtrum görs av behörigt våtrumsföretag (GVK eller BKR) med intyg. Toalettstolarna behålls.</li>
+        <li>Kökets skåp återanvänds; bardisken sticker ut 20 cm, skåpen gör det inte. Väggen mot Matsal är inte bärande.</li>
+        <li>Väggar och tak målas i alla torra rum utom balkarna uppe. Ingen tapet.</li>
+        <li>ROT: alla arbeten görs i mars–april, alltså ett kalenderår. Båda måste stå som ägare.</li>
+        <li>Styrelsens tillstånd krävs för våtrum, avlopp och väggen mot Matsal.</li>
+      </ul>
+      <h3>Störst osäkerhet</h3>
+      <ul class="notes">
+        <li>WC2: var golvbrunnen kan hamna och hur mycket rör som måste dras fram till stammen.</li>
+        <li>Putsen bakom kaklet i WC1 och i väggen mot köket, i ett hus från 1938.</li>
+        <li>Badkaret uppe: skadas tätskikt eller kakel vid bytet kan det bli en halv badrumsrenovering.</li>
+        <li>Målningen beror på väggarnas skick och på maskering runt balkarna.</li>
+      </ul>
+      <p class="src">Prisnivåer: Byggahus timpriser 2026 (plattsättare ca 750 kr/tim, snickare ca 700 kr/tim), Boio och Ekonomifokus om badrum 2026, Offerta om målning, Handelsbanken och Hemnet om ROT 2026.</p>`;
+  }
+  function saveCalc() { store.set("kalkyl", calc); renderCalc(); }
+  $("tillval").addEventListener("change", e => {
+    const id = e.target.dataset.tillval; if (!id) return;
+    calc.tillval = e.target.checked ? [...new Set([...calc.tillval, id])] : calc.tillval.filter(x => x !== id); saveCalc();
+  });
+  for (const k of ["buffert", "ge", "rot"]) $(k).onchange = e => { calc[k] = +e.target.value; saveCalc(); };
+  $("printCalc").onclick = () => window.print();
+  document.addEventListener("click", e => {                    // (i): klick öppnar och stänger, klick utanför stänger
+    const b = e.target.closest(".info");
+    for (const x of document.querySelectorAll(".info.open")) if (x !== b) x.classList.remove("open");
+    if (b) b.classList.toggle("open");
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") for (const x of document.querySelectorAll(".info.open")) x.classList.remove("open"); });
+
+  let mode = store.get("view", "plan") === "kalkyl" ? "kalkyl" : "plan";
+  function setMode(m) {
+    mode = m; store.set("view", m); $("mode").value = m;
+    const k = m === "kalkyl";
+    $("stage").hidden = k; $("planSide").hidden = k; $("planNotes").hidden = k;
+    $("sheet").hidden = !k; $("kalkylSide").hidden = !k;
+    if (!k && result.length) fit();                          // svg:n hade ingen storlek medan den var dold
+  }
+  $("mode").onchange = e => setMode(e.target.value);
+
   // ---------- utskrift: allt som är valt under Lager och Visa, A4, skala 1:50/1:100/1:200 ----------
   const A4 = [210, 297], MARGIN = 10, FOOTER = 18;            // mm
   function buildPrint() {
+    if (mode === "kalkyl") {                                   // kalkylen som den syns, stående A4
+      let ps = $("printstyle");
+      if (!ps) { ps = document.createElement("style"); ps.id = "printstyle"; document.head.appendChild(ps); }
+      ps.textContent = "@page { size: A4 portrait; margin: 14mm; } #print .calc { max-width: none; font: 9.5pt/1.4 Arial, Helvetica, sans-serif; }";
+      $("print").innerHTML = `<article class="calc">${$("calc").innerHTML}</article>`;
+      return;
+    }
     const [x0, y0, x1, y1] = bounds(), pad = 15, w = x1 - x0 + 2 * pad, h = y1 - y0 + 2 * pad;   // cm
     const room = land => [(land ? A4[1] : A4[0]) - 2 * MARGIN, (land ? A4[0] : A4[1]) - 2 * MARGIN - FOOTER];
     let N = 1000, land = w > h;
@@ -1281,6 +1455,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
 
   if (!window.polygonClipping) window.polygonClipping = { intersection: () => [], union: () => { throw 0; } };
   compute();
+  renderTillval(); renderCalc(); setMode(mode);
 })();
 </script>
 </body>
