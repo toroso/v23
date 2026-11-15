@@ -162,6 +162,21 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .calc td small { display: block; color: var(--muted); font-size: .82rem; margin-top: 2px; }
 .calc tr.group th { background: var(--paper); font-size: .82rem; font-weight: 600; color: var(--muted); }
 .calc tr.sum td { font-weight: 600; }
+.calc thead .hint { font-weight: 400; margin-left: 6px; }
+.calc tr.post { cursor: pointer; }
+.calc tr.post:hover td { background: var(--paper); }
+.calc .exp { all: unset; cursor: pointer; font-weight: 600; }
+.calc .exp::before { content: "▸"; display: inline-block; width: 1em; color: var(--muted); transition: transform .15s; }
+.calc .exp[aria-expanded="true"]::before { transform: rotate(90deg); }
+.calc .exp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.calc tr.post td small { margin-left: 1em; }
+.calc tbody.delar td { border-top: 0; padding-top: 4px; padding-bottom: 4px; font-size: .9rem; background: var(--paper); }
+.calc tbody.delar td:first-child { padding-left: calc(12px + 1em); }
+.calc tbody.delar tr:first-child td { padding-top: 8px; }
+.calc tbody.delar tr.delsum td { color: var(--muted); }
+.calc tbody.delar tr.delsum td { font-style: italic; }
+.calc tbody.delar tr.delsum.first td { border-top: 1px dashed var(--rule); padding-top: 6px; }
+.calc tbody.delar tr:last-child td { padding-bottom: 10px; }
 .calc tr.minus td { color: var(--accent); }
 .calc tr.net td { font-weight: 700; font-size: 1.05rem; border-top: 2px solid var(--ink); }
 .calc ul.notes { margin: 0; padding-left: 20px; }
@@ -304,7 +319,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
     </section>
   </main>
   <main class="sheet" id="sheet" hidden>
-    <div class="sheetbar"><button id="printCalc" type="button">Skriv ut</button></div>
+    <div class="sheetbar"><button id="expandAll" type="button">Visa alla delar</button><button id="printCalc" type="button">Skriv ut</button></div>
     <article class="calc" id="calc"></article>
   </main>
   <main class="gallery" id="gallery" hidden>
@@ -1334,31 +1349,110 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   applyTheme(theme); $("theme").value = theme;
   $("theme").onchange = e => { store.set("theme", e.target.value); applyTheme(e.target.value); };
 
-  // ---------- kalkyl: tkr inkl. moms, före ROT. arbete = arbetets andel (för ROT) ----------
+  // ---------- kalkyl: tkr inkl. moms, före ROT ----------
+  // delar: [namn, låg, hög, arbetets andel]. Postens låg och hög är summan av delarna; arbetet ger ROT.
   const POSTER = [
-    { namn: "WC2, nytt våtrum", text: "Rivning, väggar och dörr flyttas, rör och golvbrunn flyttas, tätskikt, elgolvvärme, kakel och klinker, dusch och handfat, toaletten sätts tillbaka, fläkt, våtrumsintyg", lag: 200, hog: 290, arbete: .6 },
-    { namn: "Målning", text: "Väggar och tak i alla torra rum (ca 480 m², balkarna uppe målas inte), spackling, dörrar, foder och lister", lag: 120, hog: 200, arbete: .8 },
-    { namn: "WC1 blir garderob", text: "Kakel och porslin rivs, ledningar proppas vid stammen, revisionslucka, väggarna gipsas, parkett", lag: 45, hog: 75, arbete: .7 },
-    { namn: "Kök", text: "Halva väggen mot Matsal rivs ovanför bänkskivan och balken förlängs, bardisk i trä 120 × 80 på befintliga skåp, nytt kakel 3,3 m², ny fläkt", lag: 47, hog: 89, arbete: .6 },
-    { namn: "Badrummet uppe", text: "Vanligt badkar med front, tvättställ med kommod, tvättmaskin och torktumlare, installation", lag: 45, hog: 85, arbete: .4 },
-    { namn: "Sovrum3 (Sovrum3_Ruff)", text: "Ny vägg ovanpå parketten med ventilationsspringa, ny dörr till MasterBedroom, skjutdörr 125 cm, gamla dörren mot H2 krokas av", lag: 35, hog: 60, arbete: .6 },
-    { namn: "El", text: "Golvvärme och fläkt i WC2, köksfläkt, uttag och ljus i Sovrum3, H2 och garderoben", lag: 25, hog: 45, arbete: .7 },
-    { namn: "Garderoberna i Sovrum1", text: "Garderoberna rivs, hålet i Sovrum1.2 lagas, parketten lagas", lag: 12, hog: 24, arbete: .75 },
-    { namn: "Sovrum2", text: "Plastmattan rivs, eventuell avjämning, parkett och lister (11 m²)", lag: 12, hog: 24, arbete: .5 },
-    { namn: "Gemensamt", text: "Skydd, bortforsling (2,3 tr utan hiss), slutstädning", lag: 15, hog: 28, arbete: .8 },
+    { namn: "WC2, nytt våtrum", text: "Rivning, väggar och dörr flyttas, rör och golvbrunn flyttas, tätskikt, elgolvvärme, kakel och klinker, dusch och handfat, toaletten sätts tillbaka, fläkt, våtrumsintyg", delar: [
+      ["Rivning av väggar, kakel och klinker", 12, 18, .9],
+      ["Nya väggar och dörren flyttas: regling, våtrumsskivor, ny dörr", 25, 35, .6],
+      ["Rör och golvbrunn flyttas, nytt avlopp fram till stammen", 40, 60, .75],
+      ["Avjämning och fall mot brunnen", 6, 10, .7],
+      ["Tätskikt och våtrumsintyg", 18, 25, .7],
+      ["Elgolvvärme, matta och läggning", 8, 12, .5],
+      ["Kakel och klinker, material", 20, 32, 0],
+      ["Plattsättning av väggar och golv", 45, 60, 1],
+      ["Dusch, handfat, blandare och spegel", 20, 30, .25],
+      ["Toaletten sätts tillbaka, fläkt monteras", 6, 8, .6],
+    ] },
+    { namn: "Målning", text: "Väggar och tak i alla torra rum (ca 480 m², balkarna uppe målas inte), spackling, dörrar, foder och lister", delar: [
+      ["Skydd och maskering, även runt balkarna uppe", 10, 18, 1],
+      ["Spackling och slipning av väggar och tak", 40, 70, .95],
+      ["Målning av väggar och tak, två strykningar", 40, 62, 1],
+      ["Dörrar, foder och lister", 15, 25, .9],
+      ["Färg och förbrukning", 15, 25, 0],
+    ] },
+    { namn: "WC1 blir garderob", text: "Kakel och porslin rivs, ledningar proppas vid stammen, revisionslucka, väggarna gipsas, parkett", delar: [
+      ["Rivning av kakel, klinker och porslin", 8, 12, .9],
+      ["Ledningar proppas vid stammen, revisionslucka", 8, 14, .8],
+      ["Väggarna gipsas eller putsas om", 15, 25, .75],
+      ["Avjämning där klinkern satt", 4, 7, .6],
+      ["Parkett och lister, ca 2 m²", 5, 8, .5],
+      ["Tröskeln tas bort och dörren justeras", 3, 5, .8],
+      ["Frånluftsdonet behålls eller flyttas", 2, 4, .8],
+    ] },
+    { namn: "Kök", text: "Halva väggen mot Matsal rivs ovanför bänkskivan och balken förlängs, bardisk i trä 120 × 80 på befintliga skåp, nytt kakel 3,3 m², ny fläkt", delar: [
+      ["Väggen mot Matsal rivs ovanför skivan, balken förlängs", 12, 25, .8],
+      ["Väggar och tak lagas efter rivningen", 6, 10, .9],
+      ["Bardisk i trä 120 × 80, material", 6, 12, 0],
+      ["Bardisken monteras på befintliga skåp", 4, 7, 1],
+      ["Kaklet rivs, nytt kakel 3,3 m² sätts", 10, 19, .8],
+      ["Ny köksfläkt med montering", 7, 13, .25],
+      ["Lister, anslutningar och fogar", 2, 3, .8],
+    ] },
+    { namn: "Badrummet uppe", text: "Vanligt badkar med front, tvättställ med kommod, tvättmaskin och torktumlare, installation", delar: [
+      ["Gamla badkaret tas ut", 3, 5, .9],
+      ["Badkar med front, material", 8, 16, 0],
+      ["Badkaret monteras, ansluts och fogas", 8, 14, .9],
+      ["Tvättställ med kommod och blandare, material", 6, 12, 0],
+      ["Tvättstället monteras och ansluts", 3, 5, .9],
+      ["Tvättmaskin och torktumlare", 14, 25, 0],
+      ["Tvättmaskin och torktumlare installeras", 3, 8, .8],
+    ] },
+    { namn: "Sovrum3 (Sovrum3_Ruff)", text: "Ny vägg ovanpå parketten med ventilationsspringa, ny dörr till MasterBedroom, skjutdörr 125 cm, gamla dörren mot H2 krokas av", delar: [
+      ["Ny vägg: regling, isolering och gips, ventilationsspringa", 14, 24, .7],
+      ["Ny dörr med karm till MasterBedroom", 7, 11, .4],
+      ["Skjutdörr 125 cm med beslag", 7, 13, .3],
+      ["Gamla dörren mot H2 krokas av", 2, 4, 1],
+      ["Spackling, lister och anslutningar", 5, 8, .8],
+    ] },
+    { namn: "El", text: "Golvvärme och fläkt i WC2, köksfläkt, uttag och ljus i Sovrum3, H2 och garderoben", delar: [
+      ["Golvvärmen i WC2: termostat och inkoppling", 5, 8, .8],
+      ["Fläkten i WC2 kopplas in", 3, 5, .7],
+      ["Köksfläkten kopplas in", 2, 4, .8],
+      ["Uttag och ljus i Sovrum3 och H2", 7, 13, .7],
+      ["Ljus och uttag i nya garderoben", 3, 6, .7],
+      ["Uttag flyttas från väggen mot Matsal", 3, 5, .7],
+      ["Egenkontroll och intyg", 2, 4, 1],
+    ] },
+    { namn: "Garderoberna i Sovrum1", text: "Garderoberna rivs, hålet i Sovrum1.2 lagas, parketten lagas", delar: [
+      ["Garderoberna rivs", 3, 5, .9],
+      ["Hålet i Sovrum1.2 lagas", 4, 8, .8],
+      ["Parketten lagas där garderoberna stått", 5, 11, .6],
+    ] },
+    { namn: "Sovrum2", text: "Plastmattan rivs, eventuell avjämning, parkett och lister (11 m²)", delar: [
+      ["Plastmattan rivs", 2, 3, .9],
+      ["Avjämning vid behov", 1, 4, .6],
+      ["Parkett, material 11 m²", 4, 9, 0],
+      ["Parketten läggs", 3, 5, 1],
+      ["Lister", 2, 3, .6],
+    ] },
+    { namn: "Gemensamt", text: "Skydd, bortforsling (2,3 tr utan hiss), slutstädning", delar: [
+      ["Skydd av trapphus och golv", 3, 6, .8],
+      ["Bortforsling och container, 2,3 tr utan hiss", 8, 14, .8],
+      ["Slutstädning", 4, 8, 1],
+    ] },
   ];
   const TILLVAL = [
-    { id: "kok3", namn: "Ny träskiva längs Kök.3", text: "Inklusive urtag och montering", lag: 16, hog: 26, arbete: .4,
+    { id: "kok3", namn: "Ny träskiva längs Kök.3", text: "Inklusive urtag och montering", delar: [
+      ["Träskiva, material", 7, 12, 0], ["Urtag och montering", 5, 8, 1], ["Diskhon lyfts ur och ansluts igen", 4, 6, .9]],
       info: "I grundkalkylen får bara bardisken ny träskiva. Med det här valet får även bänken längs Kök.3 samma skiva, så att köket ser enhetligt ut. Diskhon lyfts ur och sätts tillbaka, och kaklet byts ändå." },
-    { id: "vitvaror", namn: "Nya vitvaror", text: "Fristående kyl, frys, diskmaskin och spis med ugn", lag: 30, hog: 55, arbete: .1,
+    { id: "vitvaror", namn: "Nya vitvaror", text: "Fristående kyl, frys, diskmaskin och spis med ugn", delar: [
+      ["Kyl och frys", 12, 22, 0], ["Diskmaskin", 6, 10, 0], ["Spis med ugn", 9, 17, 0], ["Installation och bortforsling av de gamla", 3, 6, 1]],
       info: "Grundkalkylen behåller dagens vitvaror. Välj om de är gamla eller om ni vill ha nytt: fristående kyl, frys, diskmaskin och spis med ugn i mellanklass, inklusive installation och bortforsling. Nästan allt är material, så ROT påverkas knappt." },
-    { id: "ho", namn: "Ny diskho och blandare", text: "", lag: 7, hog: 14, arbete: .4,
+    { id: "ho", namn: "Ny diskho och blandare", text: "", delar: [
+      ["Diskho och blandare, material", 4, 9, 0], ["Montering och anslutning", 3, 5, 1]],
       info: "Behåll eller byt diskho och blandare. Passar bäst ihop med ny skiva längs Kök.3, eftersom hon då ändå lyfts ur och anslutningarna görs om." },
-    { id: "sten", namn: "Stenplattor i WC1", text: "I stället för parkett", lag: 3, hog: 6, arbete: .6,
+    { id: "sten", namn: "Stenplattor i WC1", text: "I stället för parkett", delar: [
+      ["Stenplattor i stället för parkett, merkostnad material", 1, 3, 0], ["Plattsättning i stället för parkettläggning, merkostnad", 2, 3, 1]],
       info: "Klinkern rivs ändå. Parkett ger samma golv som i resten av lägenheten. Stenplattor tål mer och gör det enklare att göra om rummet till våtrum igen, men kräver ett jämnt underlag och blir lite dyrare." },
-    { id: "golvS1", namn: "Nytt golv i hela Sovrum1", text: "I stället för lagning", lag: 9, hog: 15, arbete: .5,
+    { id: "golvS1", namn: "Nytt golv i hela Sovrum1", text: "I stället för lagning", delar: [
+      ["Parkett, material", 4, 7, 0], ["Gamla parketten rivs, ny läggs", 5, 8, 1]],
       info: "Där garderoberna stått saknas troligen parkett. En lagning med liknande parkett syns ofta, särskilt i gammalt golv som mörknat. Nytt golv i hela rummet ger ett jämnt resultat, men kostar mer." },
   ];
+  for (const p of [...POSTER, ...TILLVAL]) {                  // summera delarna: totalt och arbete, låg och hög
+    p.lag = p.delar.reduce((s, d) => s + d[1], 0); p.hog = p.delar.reduce((s, d) => s + d[2], 0);
+    p.arbLag = p.delar.reduce((s, d) => s + d[1] * d[3], 0); p.arbHog = p.delar.reduce((s, d) => s + d[2] * d[3], 0);
+  }
   const ROT_ANDEL = .3, ROT_TAK = 50;                          // 2026: 30 % av arbetet, högst 50 tkr per person och år
   let calc = Object.assign({ tillval: [], buffert: 15, ge: 0, rot: 2 }, store.get("kalkyl", {}));
   const tkr = v => Math.round(v).toLocaleString("sv-SE");
@@ -1366,7 +1460,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     const valda = TILLVAL.filter(t => calc.tillval.includes(t.id));
     const bas = POSTER.reduce((s, p) => s + p[k], 0), tv = valda.reduce((s, t) => s + t[k], 0);
     const ge = (bas + tv) * calc.ge / 100, buf = (bas + tv + ge) * calc.buffert / 100;
-    const arbete = [...POSTER, ...valda].reduce((s, p) => s + p[k] * p.arbete, 0);
+    const ak = k === "lag" ? "arbLag" : "arbHog", arbete = [...POSTER, ...valda].reduce((s, p) => s + p[ak], 0);
     const rot = Math.min(arbete * ROT_ANDEL, ROT_TAK * calc.rot);
     return { bas, tv, ge, buf, arbete, rot, netto: bas + tv + ge + buf - rot };
   }
@@ -1380,8 +1474,19 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   function renderCalc() {
     const L = calcTotals("lag"), H = calcTotals("hog"), valda = TILLVAL.filter(t => calc.tillval.includes(t.id));
     const row = (namn, text, l, h, cls = "") => `<tr class="${cls}"><td>${esc(namn)}${text ? `<small>${esc(text)}</small>` : ""}</td><td class="num">${tkr(l)}</td><td class="num">${tkr(h)}</td></tr>`;
-    const rows = POSTER.map(p => row(p.namn, p.text, p.lag, p.hog));
-    if (valda.length) rows.push(`<tr class="group"><th colspan="3">Tillval</th></tr>`, ...valda.map(t => row(t.namn, t.text, t.lag, t.hog)));
+    const span = (l, h) => l === h ? tkr(l) : `${tkr(l)}–${tkr(h)}`;
+    const split = (al, ah, ml, mh) => [al || ah ? `arbete ${span(al, ah)}` : "", ml || mh ? `material ${span(ml, mh)}` : ""].filter(Boolean).join(", ");
+    const post = p => {                                         // en tbody per post: raden och dess delar
+      const id = "post-" + p.namn.replace(/[^a-z0-9]+/gi, "-"), open = openPosts.has(p.namn);
+      const head = `<tr class="post"><td><button class="exp" type="button" data-post="${esc(p.namn)}" aria-expanded="${open}" aria-controls="${id}">${esc(p.namn)}</button>${p.text ? `<small>${esc(p.text)}</small>` : ""}</td><td class="num">${tkr(p.lag)}</td><td class="num">${tkr(p.hog)}</td></tr>`;
+      const del = p.delar.map(([n, l, h, x]) => `<tr class="del"><td>${esc(n)}<small>${split(l * x, h * x, l * (1 - x), h * (1 - x))}</small></td><td class="num">${tkr(l)}</td><td class="num">${tkr(h)}</td></tr>`).join("");
+      const sum = `<tr class="del delsum first"><td>Varav arbete</td><td class="num">${tkr(p.arbLag)}</td><td class="num">${tkr(p.arbHog)}</td></tr><tr class="del delsum"><td>Varav material</td><td class="num">${tkr(p.lag - p.arbLag)}</td><td class="num">${tkr(p.hog - p.arbHog)}</td></tr>`;
+      return `<tbody class="postgrp${open ? " open" : ""}">${head}</tbody><tbody class="delar" id="${id}"${open ? "" : " hidden"}>${del}${sum}</tbody>`;
+    };
+    const body = rows => rows.length ? `<tbody>${rows.join("")}</tbody>` : "";
+    const rows = [];
+    const groups = [POSTER.map(post).join("")];
+    if (valda.length) groups.push(`<tbody><tr class="group"><th colspan="3">Tillval</th></tr></tbody>`, valda.map(post).join(""));
     rows.push(row("Summa", "", L.bas + L.tv, H.bas + H.tv, "sum"));
     if (calc.ge) rows.push(row(`Samordnande entreprenör ${calc.ge} %`, "", L.ge, H.ge));
     if (calc.buffert) rows.push(row(`Buffert ${calc.buffert} %`, "", L.buf, H.buf));
@@ -1389,11 +1494,12 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       `30 % av arbetet (${tkr(L.arbete)}–${tkr(H.arbete)} tkr), högst ${tkr(ROT_TAK * calc.rot)} tkr per år`, -L.rot, -H.rot, "minus"));
     rows.push(row("Netto", "", L.netto, H.netto, "net"));
     $("calc").innerHTML = `<h2>Renoveringskalkyl</h2>
-      <p class="lede">Grov uppskattning för Vasavägen 23 i mellanstandard, Stockholm 2026. Allt i tusen kronor inklusive moms. Hantverkare gör allt och lägenheten är tom under arbetet. Bygger på prisnivåer, inte på offerter.</p>
+      <p class="lede">Grov uppskattning för Vasavägen 23 i mellanstandard, Stockholm 2026. Allt i tusen kronor inklusive moms. Hantverkare gör allt och lägenheten är tom under arbetet. Bygger på prisnivåer, inte på offerter. Delarna och fördelningen mellan arbete och material är bedömningar, gjorda för att kunna jämföras med offerter.</p>
       <div class="kpis"><div class="kpi"><span>Netto efter ROT</span><b>${tkr(L.netto)}–${tkr(H.netto)} tkr</b></div>
         <div class="kpi"><span>Före ROT</span><b>${tkr(L.netto + L.rot)}–${tkr(H.netto + H.rot)} tkr</b></div>
-        <div class="kpi"><span>Varav arbete</span><b>${tkr(L.arbete)}–${tkr(H.arbete)} tkr</b></div></div>
-      <table><thead><tr><th>Post</th><th class="num">Låg</th><th class="num">Hög</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+        <div class="kpi"><span>Varav arbete</span><b>${tkr(L.arbete)}–${tkr(H.arbete)} tkr</b></div>
+        <div class="kpi"><span>Varav material</span><b>${tkr(L.bas + L.tv - L.arbete)}–${tkr(H.bas + H.tv - H.arbete)} tkr</b></div></div>
+      <table><thead><tr><th>Post <span class="hint">klicka för delar</span></th><th class="num">Låg</th><th class="num">Hög</th></tr></thead>${groups.join("")}${body(rows)}</table>
       <h3>Förutsättningar</h3>
       <ul class="notes">
         <li>Lager: WC2, Kök, WC1, FastGarderobNere och Sovrum3_Ruff. Mängderna är tagna ur planritningen.</li>
@@ -1412,7 +1518,18 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       </ul>
       <p class="src">Prisnivåer: Byggahus timpriser 2026 (plattsättare ca 750 kr/tim, snickare ca 700 kr/tim), Boio och Ekonomifokus om badrum 2026, Offerta om målning, Handelsbanken och Hemnet om ROT 2026.</p>`;
   }
+  const openPosts = new Set();                                 // utfällda poster, bara för stunden
   function saveCalc() { store.set("kalkyl", calc); renderCalc(); }
+  $("calc").addEventListener("click", e => {
+    const b = e.target.closest("tr.post"); if (!b) return;
+    const n = b.querySelector(".exp").dataset.post;
+    openPosts.has(n) ? openPosts.delete(n) : openPosts.add(n); renderCalc(); $("calc").querySelector(`.exp[data-post="${CSS.escape(n)}"]`)?.focus();
+  });
+  $("expandAll").onclick = () => {
+    const alla = [...POSTER, ...TILLVAL].map(p => p.namn);
+    if (alla.every(n => openPosts.has(n))) openPosts.clear(); else for (const n of alla) openPosts.add(n);
+    renderCalc();
+  };
   $("tillval").addEventListener("change", e => {
     const id = e.target.dataset.tillval; if (!id) return;
     calc.tillval = e.target.checked ? [...new Set([...calc.tillval, id])] : calc.tillval.filter(x => x !== id); saveCalc();
