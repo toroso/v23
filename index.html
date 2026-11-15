@@ -1448,6 +1448,11 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     { id: "golvS1", namn: "Nytt golv i hela Sovrum1", text: "I stället för lagning", delar: [
       ["Parkett, material", 4, 7, 0], ["Gamla parketten rivs, ny läggs", 5, 8, 1]],
       info: "Där garderoberna stått saknas troligen parkett. En lagning med liknande parkett syns ofta, särskilt i gammalt golv som mörknat. Nytt golv i hela rummet ger ett jämnt resultat, men kostar mer." },
+    { id: "tapet", namn: "Tapet i stället för målade väggar", text: "Alla väggar i torra rum, ca 340 m², tapet i mellanklass. Taken målas ändå", delar: [
+      ["Tapet i mellanklass, ca 75 rullar à 300–450 kr, i stället för väggfärg", 19, 29, 0],
+      ["Tapetsering i stället för två strykningar färg", 34, 51, 1],
+      ["Grundning inför tapetsering", 4, 8, .7]],
+      info: "Grundkalkylen målar väggarna. Tapet döljer små ojämnheter bättre, vilket passar i ett hus från 1938, men kostar mer och är mer jobb att byta senare. Räknat på tapet i mellanklass, ca 300–450 kr per rulle: inte designertapet och inte den billigaste. Bara sovrummen blir ungefär en tredjedel av beloppet." },
   ];
   for (const p of [...POSTER, ...TILLVAL]) {                  // summera delarna: totalt och arbete, låg och hög
     p.lag = p.delar.reduce((s, d) => s + d[1], 0); p.hog = p.delar.reduce((s, d) => s + d[2], 0);
@@ -1505,7 +1510,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
         <li>Lager: WC2, Kök, WC1, FastGarderobNere och Sovrum3_Ruff. Mängderna är tagna ur planritningen.</li>
         <li>Våtrum görs av behörigt våtrumsföretag (GVK eller BKR) med intyg. Toalettstolarna behålls.</li>
         <li>Kökets skåp återanvänds; bardisken sticker ut 20 cm, skåpen gör det inte. Väggen mot Matsal är inte bärande.</li>
-        <li>Väggar och tak målas i alla torra rum utom balkarna uppe. Ingen tapet.</li>
+        <li>Väggar och tak målas i alla torra rum utom balkarna uppe. Tapet på väggarna finns som tillval.</li>
         <li>ROT: alla arbeten görs i mars–april, alltså ett kalenderår. Båda måste stå som ägare.</li>
         <li>Styrelsens tillstånd krävs för våtrum, avlopp och väggen mot Matsal.</li>
       </ul>
