@@ -695,6 +695,25 @@ lager Ovanvåning, vridning 180, förskjutning 890 1005      # Vardagsrum.9 i li
   möbel Skrivbord: Vardagsrum.9 start 50, 160 x 80, skrivbord, stol, ut -10      # under fönstret, 50 cm från V.8
   möbel Elpiano: Vardagsrum.8 start 0, 130 x 30, elpiano
 
+
+# GU rivs. Vardagsrum.3–6 (90, 65, 110, 610?) blir två väggar: 200 och 675?.
+# Väggarna efter blir två nummer lägre, så det som sitter på dem flyttas med.
+# Vägg 4 börjar 65 cm tidigare än gamla vägg 6, så det som mäts från dess start får +65.
+lager TaBortGU på Ovanvåning
+  ta bort GU
+  rum Vardagsrum: 90 H 140 V 200 H 675? H 200 V 190 H 255 H 190 V 145 H 115 V 55 H 165 H50.81 193.5 V50.81 10 H 65 V 152.7 H 150? V 250
+    Vardagsrum.18 mot Badrum.2, start 0
+    Vardagsrum.18 tjocklek 10
+  Sovrum4.3 mot Vardagsrum.13, start 0
+  inredning TrappaUppe: Vardagsrum.9 slut 10, 90 x 280, trappa, pil från väggen
+  fönster FönsterV9: Vardagsrum.7 start 10, 235
+  inredning TakfönsterV6a: Vardagsrum.4 start 165, 90 x 160, takfönster, ut -20
+  inredning TakfönsterV6b: Vardagsrum.4 start 285, 90 x 160, takfönster, ut -20
+  möbel Bäddsoffa: Vardagsrum.4 start 95, 140 x 100, bäddsoffa, utfälld 200, ut -10
+  möbel SoffaSchäslong: Vardagsrum.4 start 285, 260 x 90, soffa, schäslong slut 200 x 90, ut -10
+  möbel Skrivbord: Vardagsrum.7 start 50, 160 x 80, skrivbord, stol, ut -10
+  möbel Elpiano: Vardagsrum.6 start 0, 130 x 30, elpiano
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
 <script>
