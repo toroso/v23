@@ -281,6 +281,27 @@ a.btn[hidden] { display: none; }
   .app { display: none !important; }
   #print { display: block; }
 }
+.mhint { color: var(--muted); font-size: .82rem; margin: 6px 0; }
+.mrum { margin: 2px 0 8px; }
+.mhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mhead b.off { color: var(--muted); font-weight: 500; }
+.mhead button, .mred { padding: 2px 8px; font-size: .78rem; }
+.mlist { list-style: none; margin: 2px 0 0; padding: 0 0 0 4px; }
+.mlist li { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.mlist .opt { flex: 1; min-width: 0; }
+.medit { border: 1px solid var(--rule); border-radius: 8px; padding: 4px 12px 10px; margin: 8px 0 16px; background: var(--panel); }
+.medit h2 { margin-top: 10px; }
+.medit h3 { font-size: .82rem; font-weight: 600; margin: 12px 0 6px; }
+.mfield { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; font-size: .85rem; }
+.mfield input { width: 60%; font: inherit; padding: 3px 6px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); }
+.mfield input[type="number"] { width: 80px; }
+.mkrav { display: grid; gap: 4px; font-size: .82rem; }
+.mkrav label { display: flex; justify-content: space-between; gap: 8px; }
+.mtyper, .mrow { display: flex; flex-wrap: wrap; gap: 5px; }
+.mtyper button, .mrow button { padding: 3px 8px; font-size: .8rem; }
+.msave { margin-top: 14px; }
+.mhit { fill: transparent; stroke: none; cursor: move; pointer-events: all; }
+.mhit.on { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
 .konto { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 14px 0; font-size: 13px; color: var(--muted); }
 .kontoSub { margin: -8px 0 14px; font-size: 12px; color: var(--muted); }
 .konto span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -289,7 +310,7 @@ a.btn[hidden] { display: none; }
 <body>
 <div class="app">
   <aside class="side">
-    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option><option value="dokument">Dokument</option></select></h1>
+    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="moblering">Möblering</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option><option value="dokument">Dokument</option></select></h1>
     <div id="planSide">
       <h2>Lager</h2>
       <ul class="tree" id="layers"></ul>
@@ -316,6 +337,7 @@ a.btn[hidden] { display: none; }
       <ul class="blist" id="bildExtra"></ul>
     </div>
     <div id="dokSide" hidden></div>
+    <div id="mobSide" hidden></div>
     <div class="konto" id="konto"><span id="kontoText">Inte inloggad</span><button id="kontoBtn" type="button">Logga in</button></div>
     <div class="kontoSub" id="planKalla"></div>
     <label class="themepick">Utseende
@@ -397,8 +419,7 @@ a.btn[hidden] { display: none; }
 #                ”, pil slut” sist på en trappa: pil mot väggens slut (även pil start, pil från väggen, pil mot väggen)
 #                inredningens kanter numreras medurs (1 = mot väggen), så dörrar kan sitta på dem
 # skjutdörr S: X.k start 0, 90
-# möbel M: X.k start 20, 120 x 200, säng      som inredning, men blå och visas med Möbler under Visa; varianter som egna lager
-#                även soffa (”, schäslong slut 200 x 90”), bäddsoffa (”, utfälld 200”), skrivbord (”, stol”), elpiano
+# möbel M: …              ritas inte längre; möbler läggs under Möblering (rubrikmenyn)
 #                ”, inredning” sist på en dörr eller skjutdörr: visas med Inredning (dörrar på inredning gör det alltid)
 #                ”, ut 30” sist flyttar inredningen 30 cm ut från väggen (genom en öppning)
 # byt namn X till Y        byter namn på ett rum; dörrar, fönster och placeringar följer med
@@ -502,10 +523,6 @@ lager Undervåning
   dörr Ytterdörr: Hall.15 start 0, 100, ut, gångjärn start
   dörr DörrGarderob1: Garderob1.3 start 0, 100, ut, gångjärn start      # gammal igenbommad ytterdörr
 
-  # Möbler (visas med Möbler under Visa)
-  möbel SängMasterBedroom: MasterBedroom.1 start 40, 120 x 200, säng
-  möbel SängSovrum2: Sovrum2.4 start 100, 120 x 200, säng
-  möbel SängSovrum1: Sovrum1.3 slut 10, 120 x 200, säng
 
 
 lager WC2 på Undervåning
@@ -529,8 +546,6 @@ lager Sovrum3_Stor på Undervåning, alternativ Sovrum3
   Hall.4 = 290
   Hall.2 mot Sovrum3.2, start 0
   dörr DörrSovrum3: Sovrum3.2 start 10, 80, in, gångjärn start
-  möbel SängSovrum3: Sovrum3.3 slut 10, 120 x 200, säng
-  möbel SängMasterBedroom: MasterBedroom.4 slut 40, 120 x 200, säng      # vriden, huvudänden mot .4
 
 
 # Som Sovrum3_Stor, men Sovrum3 så låg som möjligt och MasterBedroom lika mycket större (summan är 410).
@@ -546,8 +561,6 @@ lager Sovrum3_90 på Undervåning, alternativ Sovrum3
   Hall.4 = 240
   Hall.2 mot Sovrum3.2, start 0
   dörr DörrSovrum3: Sovrum3.2 start 10, 80, in, gångjärn start
-  möbel SängSovrum3: Sovrum3.4 start 0, 90 x 200, säng      # kudden mot .4, i hörnet mot .3
-  möbel SängMasterBedroom: MasterBedroom.4 slut 40, 120 x 200, säng      # vriden, huvudänden mot .4
 
 
 # Sovrum1 flyttas 40 uppåt och växer sedan 60 uppåt till 350 (MasterBedroom blir 320).
@@ -572,7 +585,6 @@ lager Sovrum3_WC1 på Undervåning, alternativ Sovrum3
   rum Sovrum3: 260 H 160 H 95 V36.87 125? H36.87 65 H 235
   fönster FönsterWC1: Sovrum3.6 slut 60, 75
   dörr DörrWC1: Sovrum3.2 slut 5, 80, in, gångjärn slut      # 80 så att den går fri från sängen
-  möbel SängSovrum3: Sovrum3.6 slut 0, 90 x 200, säng      # kudden mot .6, i hörnet mot .1
   rum Hall: 110 H 170 V 75 V 170 H 285 H 290 H 195 V 100 H 180 V 25 V 25 H 120 H 120 H 535
     Hall.14 mot Sovrum1.2, start 0
     kontroll Hall.14 mot Sovrum3.2, slut -15
@@ -606,7 +618,6 @@ lager Sovrum3_Ruff på Undervåning, alternativ Sovrum3
   Sovrum1.1 mot Sovrum3.3, slut 0
   öppning ÖppningHallH2: H2.3 start 10, 90      # där dörren till MasterBedroom satt
   skjutdörr SkjutdörrSovrum3: Sovrum3.2 start 0, 125      # mot H2.4, hela väggen
-  möbel SängSovrum3: Sovrum3.4 mitt, 120 x 200, säng      # kudden mot .4
 
 
 lager WC1 på Undervåning
@@ -683,25 +694,9 @@ lager Ovanvåning, vridning 180, förskjutning 890 1005      # Vardagsrum.9 i li
   inredning BTM: Badrum.3 start 0, 60 x 60, tvättmaskin
   inredning BTT: Badrum.3 start 60, 60 x 60, torktumlare
 
-  # Möbler (visas med Möbler under Visa)
-  möbel SängSovrum4: Sovrum4.1 start 40, 160 x 200, säng
 
-  möbel GarderobS2a: Sovrum4.2 start 0, 60 x 60, garderob
-  möbel GarderobS2b: Sovrum4.2 start 60, 60 x 60, garderob
-  skjutdörr SkjutdörrGarderobS2a: GarderobS2a.3 start 0, 60
-  skjutdörr SkjutdörrGarderobS2b: GarderobS2b.3 start 0, 60
 
-  möbel GarderobS4a: Sovrum4.4 slut 0, 60 x 60, garderob
-  möbel GarderobS4b: Sovrum4.4 slut 60, 60 x 60, garderob
-  möbel GarderobS4c: Sovrum4.4 slut 120, 60 x 60, garderob
-  skjutdörr SkjutdörrGarderobS4a: GarderobS4a.3 start 0, 60
-  skjutdörr SkjutdörrGarderobS4b: GarderobS4b.3 start 0, 60
-  skjutdörr SkjutdörrGarderobS4c: GarderobS4c.3 start 0, 60
 
-  möbel Bäddsoffa: Vardagsrum.6 start 30, 140 x 100, bäddsoffa, utfälld 200, ut -10
-  möbel SoffaSchäslong: Vardagsrum.6 start 220, 260 x 90, soffa, schäslong slut 200 x 90, ut -10
-  möbel Skrivbord: Vardagsrum.9 start 50, 160 x 80, skrivbord, stol, ut -10      # under fönstret, 50 cm från V.8
-  möbel Elpiano: Vardagsrum.8 start 0, 130 x 30, elpiano
 
 
 # GU rivs. Vardagsrum.3–6 (105, 65, 110, 610) blir två väggar: 215 och 675.
@@ -717,10 +712,6 @@ lager TaBortGU på Ovanvåning
   fönster FönsterV9: Vardagsrum.7 start 10, 235
   inredning TakfönsterV6a: Vardagsrum.4 start 165, 90 x 160, takfönster, ut -20
   inredning TakfönsterV6b: Vardagsrum.4 start 290, 90 x 160, takfönster, ut -20
-  möbel Bäddsoffa: Vardagsrum.4 start 95, 140 x 100, bäddsoffa, utfälld 200, ut -10
-  möbel SoffaSchäslong: Vardagsrum.4 start 285, 260 x 90, soffa, schäslong slut 200 x 90, ut -10
-  möbel Skrivbord: Vardagsrum.7 start 50, 160 x 80, skrivbord, stol, ut -10
-  möbel Elpiano: Vardagsrum.6 start 0, 130 x 30, elpiano
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
@@ -1074,7 +1065,13 @@ function furnitureGeometry(o, P, d, m, s0) {     // ritas i väggens system: a l
       }
       break;
     }
-    case "garderob": break;
+    case "garderob": if (o.doors) lines.push([L(0, D - 3), L(w / 2 + 4, D - 3)], [L(w / 2 - 4, D - 7), L(w, D - 7)]); break;   // skjutdörrar framtill
+    case "matbord": {                           // stolar längs långsidorna
+      const n = Math.max(1, Math.floor(w / 60)), cw = 42;
+      for (let i = 0; i < n; i++) { const a = w * (i + .5) / n; lines.push(rect(a - cw / 2, -30, a + cw / 2, -4), rect(a - cw / 2, D + 4, a + cw / 2, D + 30)); }
+      break;
+    }
+    case "rektangel": label = o.label || null; break;
     case "säng": {                              // huvudänden mot väggen
       const ph = Math.min(40, D * .2);
       if (w >= 140) { const pw = (w - 16) / 2; lines.push(rect(5, 6, 5 + pw, 6 + ph), rect(11 + pw, 6, 11 + 2 * pw, 6 + ph)); }
@@ -1102,7 +1099,10 @@ function furnitureGeometry(o, P, d, m, s0) {     // ritas i väggens system: a l
       if (o.bed > D) dashed.push([L(0, D), L(0, o.bed), L(w, o.bed), L(w, D)]);
       break;
     }
-    case "skrivbord": if (o.chair) lines.push(rect(w / 2 - 24, D - 12, w / 2 + 24, D + 36), [L(w / 2 - 22, D + 44), L(w / 2 + 22, D + 44)]); break;
+    case "skrivbord":
+      if (o.chair) lines.push(rect(w / 2 - 24, D - 12, w / 2 + 24, D + 36), [L(w / 2 - 22, D + 44), L(w / 2 + 22, D + 44)]);
+      if (o.keyboard) lines.push(rect(w / 2 - 22, D - 30, w / 2 + 22, D - 16));   // tangentbord framför stolen
+      break;
     case "elpiano": lines.push([L(4, D * .55), L(w - 4, D * .55)]); break;
     case "bänk": break;
     default: label = o.typ;
@@ -1162,13 +1162,14 @@ function checks(rooms, clip, thick = new Map()) {
   return out;
 }
 
-function computeFloor(plan, floor, act, clip) {
+function computeFloor(plan, floor, act, clip, opts = {}) {   // opts.noMob: hoppa över möbler i plantexten
   const st = resolveFloor(plan, floor, act);
   const pl = placeRooms(st);
   const fl = plan.layers.find(l => l.name === floor);           // våningens vridning och förskjutning
   if (fl.rot || fl.off) for (const r of pl.rooms) r.g = r.g.map(p => add(rot(p, fl.rot || 0), fl.off || [0, 0]));
   const objs = [], notes = [...st.errors, ...st.conflicts, ...pl.notes];
-  const all = [...st.objs.values()];
+  let all = [...st.objs.values()];
+  if (opts.noMob) { const mob = new Set(all.filter(o => o.kind === "möbel").map(o => o.name)); all = all.filter(o => !mob.has(o.name) && !mob.has(o.room)); }
   for (const o of all.filter(isFurn)) {
     const g = objectGeometry(o, pl.rooms, st.thick);
     if (g.error) notes.push(g.error); else objs.push({ ...o, geo: g });
@@ -1220,7 +1221,8 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     if (defaultFloors) { defaultFloors = false; plan.layers.filter(l => !l.parents.length).forEach(l => checked.add(l.name)); }   // bara första gången
     const act = activeSet(plan, checked);
     const floors = plan.layers.filter(l => !l.parents.length && act.has(l.name)).map(l => l.name);
-    result = floors.map(f => computeFloor(plan, f, act, window.polygonClipping));
+    result = floors.map(f => computeFloor(plan, f, act, window.polygonClipping, { noMob: true }));
+    lastAct = act; addMobs();
     renderLayers(act); renderFilters(); renderNotes(); draw();
   }
 
@@ -1243,7 +1245,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   }
   function renderNotes() {
     const items = plan.errors.map(m => ["err", m]);
-    for (const f of result) for (const n of f.notes) {
+    for (const f of result) for (const n of [...f.notes, ...(f.mobNotes || [])]) {
       const cls = /Krock|överlappar|bara \d+ cm|finns inte|saknar|ryms inte|skiljer/.test(n) ? "warn" : "";
       items.push([cls, result.length > 1 ? `${f.floor}: ${n.trim()}` : n.trim()]);
     }
@@ -1313,12 +1315,13 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
           out.push(`<path class="arc${dm}" d="M${G.arc.map(S).join("L")}"/>`);
         }
       }
-      for (const o of f.objs.filter(o => (o.kind === "möbel" && filters["möbler"]) || (o.kind === "inredning" && filters[o.typ === "takfönster" ? "väggobjekt" : "inredning"]))) {   // ovanpå väggar och öppningar
+      for (const o of f.objs.filter(o => (o.kind === "möbel" && (filters["möbler"] || o.edit != null)) || (o.kind === "inredning" && filters[o.typ === "takfönster" ? "väggobjekt" : "inredning"]))) {   // ovanpå väggar och öppningar
         const G = o.geo, P = pts => pts.map(S).join("L"), mc = (o.kind === "möbel" ? " mob" : "") + (o.typ === "takfönster" ? " dash" : "");
         if (G.outline) out.push(`<path class="furn${mc}" d="M${P(G.outline)}Z"/>`);
         for (const l of G.lines) out.push(`<path class="furnline${mc}" d="M${P(l)}"/>`);
         for (const l of G.dashed || []) out.push(`<path class="furnline dash${mc}" d="M${P(l)}"/>`);
         if (G.label) out.push(`<text class="flabel${mc}" x="${G.center[0].toFixed(1)}" y="${(-G.center[1]).toFixed(1)}">${esc(G.label)}</text>`);
+        if (o.edit != null && sw === 1) out.push(`<path class="mhit${o.edit === editing.sel ? " on" : ""}" data-mi="${o.edit}" d="M${P(G.box)}Z"/>`);
       }
       for (const poly of f.overlaps) out.push(`<path class="overlap" d="${poly.map(ring => "M" + ring.map(S).join("L") + "Z").join("")}"/>`);
       if (filters["mått"]) for (const r of f.rooms) {
@@ -1355,7 +1358,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       const l = plan.layers.find(x => x.name === name);
       if (l.group) plan.layers.filter(x => x.group === l.group && x.name !== name).forEach(x => checked.delete(x.name));
     } else checked.delete(name);
-    store.set("checked", [...checked]); compute();
+    store.set("checked", [...checked]); compute(); renderMob();
   });
   $("filters").addEventListener("change", e => {
     const k = e.target.dataset.filter; if (!k) return;
@@ -1667,11 +1670,241 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape") for (const x of document.querySelectorAll(".info.open")) x.classList.remove("open"); });
 
-  let mode = ["kalkyl", "bilder", "dokument"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
+  // ---------- möblering: namngivna möbleringar per rum, delade i databasen ----------
+  // En möblering = { id, vaning, rum, namn, krav: ["Lager", "!Lager"], mobler: [{ t, x, y, r, w?, d?, e?, s? }] }.
+  // x, y är möbelns mitt i cm från rummets nedre vänstra hörn (minsta x och y); r = vridning medurs, 0/90/180/270.
+  // Möblerna i plantexten (möbel …) ritas inte längre.
+  const TYPER = [
+    { id: "säng90", namn: "Säng 90", typ: "säng", w: 90, d: 200 },
+    { id: "säng120", namn: "Säng 120", typ: "säng", w: 120, d: 200 },
+    { id: "säng140", namn: "Säng 140", typ: "säng", w: 140, d: 200 },
+    { id: "säng160", namn: "Säng 160", typ: "säng", w: 160, d: 200 },
+    { id: "matbord", namn: "Matbord med stolar", typ: "matbord", w: 180, d: 90, fri: "wd" },
+    { id: "garderob50", namn: "Garderob 50 × 60", typ: "garderob", w: 50, d: 60, doors: true },
+    { id: "garderob60", namn: "Garderob 60 × 60", typ: "garderob", w: 60, d: 60, doors: true },
+    { id: "soffa", namn: "Soffa", typ: "soffa", w: 200, d: 90, fri: "w" },
+    { id: "schäslong", namn: "Soffa med schäslong", typ: "soffa", w: 260, d: 90, chaise: { depth: 200, width: 90 }, spegel: true },
+    { id: "bäddsoffa", namn: "Bäddsoffa", typ: "bäddsoffa", w: 140, d: 100, bed: 200 },
+    { id: "skrivbord120", namn: "Skrivbord 120", typ: "skrivbord", w: 120, d: 80, chair: true, keyboard: true },
+    { id: "skrivbord140", namn: "Skrivbord 140", typ: "skrivbord", w: 140, d: 80, chair: true, keyboard: true },
+    { id: "skrivbord160", namn: "Skrivbord 160", typ: "skrivbord", w: 160, d: 80, chair: true, keyboard: true },
+    { id: "elpiano", namn: "Elpiano", typ: "elpiano", w: 130, d: 30 },
+    { id: "rektangel", namn: "Rektangel", typ: "rektangel", w: 100, d: 60, fri: "wd", etikett: true },
+  ];
+  const TYP = Object.fromEntries(TYPER.map(t => [t.id, t]));
+  const it = (t, x, y, r) => ({ t, x, y, r });
+  const MOB_START = [                                  // dagens möbler, omräknade från plantexten
+    { id: "start-masterbedroom", vaning: "Undervåning", rum: "MasterBedroom", namn: "Säng 120", krav: ["!Sovrum3_Stor", "!Sovrum3_90"], mobler: [it("säng120", 100, 320, 0)] },
+    { id: "start-masterbedroom-stor", vaning: "Undervåning", rum: "MasterBedroom", namn: "Säng 120, vriden", krav: ["Sovrum3_Stor"], mobler: [it("säng120", 100, 100, 270)] },
+    { id: "start-masterbedroom-90", vaning: "Undervåning", rum: "MasterBedroom", namn: "Säng 120, vriden", krav: ["Sovrum3_90"], mobler: [it("säng120", 100, 150, 270)] },
+    { id: "start-sovrum1", vaning: "Undervåning", rum: "Sovrum1", namn: "Säng 120", krav: [], mobler: [it("säng120", 70, 100, 180)] },
+    { id: "start-sovrum2", vaning: "Undervåning", rum: "Sovrum2", namn: "Säng 120", krav: [], mobler: [it("säng120", 100, 160, 270)] },
+    { id: "start-sovrum3-stor", vaning: "Undervåning", rum: "Sovrum3", namn: "Säng 120", krav: ["Sovrum3_Stor"], mobler: [it("säng120", 70, 100, 180)] },
+    { id: "start-sovrum3-90", vaning: "Undervåning", rum: "Sovrum3", namn: "Säng 90", krav: ["Sovrum3_90"], mobler: [it("säng90", 100, 45, 270)] },
+    { id: "start-sovrum3-wc1", vaning: "Undervåning", rum: "Sovrum3", namn: "Säng 90", krav: ["Sovrum3_WC1"], mobler: [it("säng90", 100, 190, 270)] },
+    { id: "start-sovrum3-ruff", vaning: "Undervåning", rum: "Sovrum3", namn: "Säng 120", krav: ["Sovrum3_Ruff"], mobler: [it("säng120", 100, 62.5, 270)] },
+    { id: "start-sovrum4-sang", vaning: "Ovanvåning", rum: "Sovrum4", namn: "Säng 160", krav: [], mobler: [it("säng160", 210, 100, 180)] },
+    { id: "start-sovrum4-garderober", vaning: "Ovanvåning", rum: "Sovrum4", namn: "Garderober", krav: [], mobler: [
+      it("garderob60", 30, 30, 270), it("garderob60", 30, 90, 270), it("garderob60", 300, 330, 0), it("garderob60", 240, 330, 0), it("garderob60", 180, 330, 0)] },
+    { id: "start-vardagsrum-soffor", vaning: "Ovanvåning", rum: "Vardagsrum", namn: "Soffor", krav: [], mobler: [it("bäddsoffa", 60, 305, 270), it("schäslong", 55, 555, 270)] },
+    { id: "start-vardagsrum-skrivbord", vaning: "Ovanvåning", rum: "Vardagsrum", namn: "Skrivbord", krav: [], mobler: [it("skrivbord160", 330, 955, 0)] },
+    { id: "start-vardagsrum-elpiano", vaning: "Ovanvåning", rum: "Vardagsrum", namn: "Elpiano", krav: [], mobler: [it("elpiano", 215, 880, 270)] },
+  ];
+  let mobs = [], mobRead = false, mobWrite = false, editing = null, mobDrag = null, lastAct = new Set();
+  let mobOff = store.get("mobAv", []);                 // bortkryssade; nya möbleringar är på
+  const isSel = id => !mobOff.includes(id);
+  const kravOk = (m, act) => (m.krav || []).every(k => k[0] === "!" ? !act.has(k.slice(1)) : act.has(k));
+  const kravText = m => {
+    const on = (m.krav || []).filter(k => k[0] !== "!"), off = (m.krav || []).filter(k => k[0] === "!").map(k => k.slice(1));
+    return [on.length ? "kräver " + on.join(", ") : "", off.length ? "inte med " + off.join(", ") : ""].filter(Boolean).join("; ");
+  };
+  const anchorOf = g => [Math.min(...g.map(p => p[0])), Math.min(...g.map(p => p[1]))];
+  const dims = x => { const T = TYP[x.t] || TYP.rektangel; return [T.fri && T.fri.includes("w") ? x.w ?? T.w : T.w, T.fri && T.fri.includes("d") ? x.d ?? T.d : T.d]; };
+  function itemGeo(x, anchor) {
+    const T = TYP[x.t] || TYP.rektangel, [w, D] = dims(x);
+    const a = -(x.r || 0) * Math.PI / 180, d = [Math.cos(a), Math.sin(a)], m = [d[1], -d[0]];   // m: från ryggen och framåt
+    const c = add(anchor, [x.x, x.y]), p0 = sub(sub(c, mul(d, w / 2)), mul(m, D / 2));
+    const o = { typ: T.typ, width: w, depth: D, out: 0, chair: T.chair, keyboard: T.keyboard, doors: T.doors, bed: T.bed,
+      chaise: T.chaise && { side: x.s ? "start" : "slut", depth: T.chaise.depth, width: T.chaise.width }, label: T.etikett ? x.e || "" : null };
+    return furnitureGeometry(o, s => add(p0, mul(d, s)), d, m, 0);
+  }
+  function addMobs() {                                 // lägger valda möbleringars möbler i result
+    for (const f of result) {
+      f.objs = f.objs.filter(o => !o.mobItem); f.mobNotes = [];
+      if (!mobRead) continue;
+      const rooms = new Map(f.rooms.map(r => [r.name, r]));
+      const list = mobs.map(m => editing && editing.id && editing.id === m.id ? editing : m);
+      if (editing && !editing.id) list.push(editing);
+      for (const m of list) {
+        if (m.vaning !== f.floor) continue;
+        const ed = m === editing;
+        if (!ed && (!isSel(m.id) || !kravOk(m, lastAct))) continue;
+        const r = rooms.get(m.rum); if (!r) continue;
+        const an = anchorOf(r.g);
+        (m.mobler || []).forEach((x, i) => f.objs.push({ kind: "möbel", mobItem: true, name: `${(TYP[x.t] || TYP.rektangel).namn} (${m.rum}: ${m.namn})`,
+          typ: (TYP[x.t] || TYP.rektangel).typ, geo: itemGeo(x, an), edit: ed ? i : null }));
+      }
+      const furn = f.objs.filter(o => isFurn(o) && o.typ !== "takfönster");
+      for (let a = 0; a < furn.length; a++) for (let b = a + 1; b < furn.length; b++) {
+        if (!furn[a].mobItem && !furn[b].mobItem) continue;
+        let ov = []; try { ov = window.polygonClipping.intersection([furn[a].geo.box.map(rnd)], [furn[b].geo.box.map(rnd)]); } catch (e) { }
+        if (ov.reduce((s, poly) => s + area(poly[0]), 0) > 1) f.mobNotes.push(`${furn[a].name} och ${furn[b].name} överlappar`);
+      }
+    }
+  }
+  function refreshMobs() { addMobs(); renderNotes(); draw(); }
+
+  function mobRooms() {                                // alla rum per våning, ur lagrens rum och namnbyten
+    const out = new Map();
+    for (const l of plan.layers) {
+      const f = floorOf(plan, l.name); if (!out.has(f)) out.set(f, new Set());
+      for (const op of l.ops) { if (op.t === "room") out.get(f).add(op.name); if (op.t === "rename") out.get(f).add(op.to); }
+    }
+    return out;
+  }
+  const roomNow = (vaning, rum) => result.find(f => f.floor === vaning)?.rooms.find(r => r.name === rum);
+
+  function renderMob() {
+    if (mode !== "moblering") return;
+    const side = $("mobSide");
+    if (!mobRead) { side.innerHTML = `<p class="mhint">Logga in för att se och redigera möbleringar.</p>`; return; }
+    let html = "";
+    if (editing) {
+      const E = editing, sel = E.sel != null ? E.mobler[E.sel] : null, T = sel && (TYP[sel.t] || TYP.rektangel);
+      const layers = plan.layers.filter(l => l.parents.length && floorOf(plan, l.name) === E.vaning);
+      const kv = n => (E.krav || []).includes(n) ? "på" : (E.krav || []).includes("!" + n) ? "av" : "";
+      const opt = (n, v, t) => `<option value="${v}"${kv(n) === v ? " selected" : ""}>${t}</option>`;
+      const [w, D] = sel ? dims(sel) : [0, 0];
+      html += `<div class="medit"><h2>${esc(E.rum)}: ${E.id ? "redigera" : "ny möblering"}</h2>
+        <label class="mfield">Namn <input id="meNamn" value="${esc(E.namn)}"></label>
+        <h3>Krav</h3><div class="mkrav">${layers.map(l => `<label>${esc(l.name)} <select data-krav="${esc(l.name)}">${opt(l.name, "", "–")}${opt(l.name, "på", "på")}${opt(l.name, "av", "av")}</select></label>`).join("")}</div>
+        <h3>Lägg till</h3><div class="mtyper">${TYPER.map(t => `<button type="button" data-add="${t.id}">${esc(t.namn)}</button>`).join("")}</div>
+        <h3>Vald möbel</h3>${sel ? `<div class="mvald"><b>${esc(T.namn)}</b>
+          ${T.fri && T.fri.includes("w") ? `<label class="mfield">Bredd <input type="number" min="10" step="5" data-dim="w" value="${w}"></label>` : ""}
+          ${T.fri && T.fri.includes("d") ? `<label class="mfield">Djup <input type="number" min="10" step="5" data-dim="d" value="${D}"></label>` : ""}
+          ${T.etikett ? `<label class="mfield">Text <input data-dim="e" value="${esc(sel.e || "")}"></label>` : ""}
+          <div class="mrow"><button type="button" data-act="vrid">Vrid 90°</button>${T.spegel ? `<button type="button" data-act="spegla">Spegla</button>` : ""}<button type="button" data-act="bort">Ta bort</button></div></div>`
+        : `<p class="mhint">Klicka på en möbel i planen för att välja den. Dra för att flytta.</p>`}
+        <div class="mrow msave"><button type="button" class="primary" data-act="spara">Spara</button><button type="button" data-act="sparasom">Spara som…</button><button type="button" data-act="avbryt">Avbryt</button>
+        ${E.id ? `<button type="button" data-act="radera">Ta bort möblering</button>` : ""}</div>
+        <p class="mhint" id="meHint">${E.dirty ? "Ändringarna är inte sparade." : ""}</p></div>`;
+    }
+    if (!result.length) html += `<p class="mhint">Kryssa i en våning under Lager.</p>`;
+    for (const [vaning, names] of mobRooms()) {
+      if (!result.some(f => f.floor === vaning)) continue;   // bara våningar som visas
+      html += `<h2>${esc(vaning)}</h2>`;
+      for (const rum of [...names].sort((a, b) => a.localeCompare(b, "sv"))) {
+        const list = mobs.filter(m => m.vaning === vaning && m.rum === rum).sort((a, b) => a.namn.localeCompare(b.namn, "sv"));
+        const here = !!roomNow(vaning, rum);
+        html += `<div class="mrum"><div class="mhead"><b class="${here ? "" : "off"}">${esc(rum)}</b>${mobWrite && !editing ? `<button type="button" data-ny="${esc(vaning)}|${esc(rum)}" ${here ? "" : `disabled title="Rummet finns inte med de lager som är valda"`}>Ny</button>` : ""}</div>`;
+        if (list.length) html += `<ul class="mlist">${list.map(m => {
+          const ok = kravOk(m, lastAct), kt = kravText(m);
+          return `<li><label class="opt${ok && here ? "" : " off"}"><input type="checkbox" data-sel="${esc(m.id)}" ${isSel(m.id) ? "checked" : ""}><span>${esc(m.namn)}${kt ? ` <small>${esc(kt)}</small>` : ""}</span></label>` +
+            (mobWrite && !editing ? `<button type="button" class="mred" data-red="${esc(m.id)}" ${here ? "" : "disabled"}>Redigera</button>` : "") + `</li>`;
+        }).join("")}</ul>`;
+        html += `</div>`;
+      }
+    }
+    side.innerHTML = html;
+  }
+
+  const mobHint = t => { const h = document.getElementById("meHint"); if (h) h.textContent = t; };
+  const changed = () => { editing.dirty = true; refreshMobs(); renderMob(); };
+  function startEdit(m) {
+    editing = JSON.parse(JSON.stringify(m)); editing.sel = null; editing.dirty = false;
+    refreshMobs(); renderMob();
+  }
+  async function saveEdit(asNew) {
+    let namn = (document.getElementById("meNamn")?.value || editing.namn).trim() || "Möblering";
+    if (asNew) { const n = prompt("Namn på den nya möbleringen:", namn + (editing.id ? " (kopia)" : "")); if (n === null) return; namn = n.trim() || namn; }
+    const data = { vaning: editing.vaning, rum: editing.rum, namn, krav: editing.krav || [], mobler: editing.mobler };
+    try {
+      await window.v23mobDb.save(asNew ? null : editing.id, data);
+      editing = null; refreshMobs(); renderMob();
+    } catch (e) { console.error(e); mobHint("Kunde inte spara."); }
+  }
+
+  $("mobSide").addEventListener("change", e => {
+    const t = e.target;
+    if (t.dataset.sel) {
+      mobOff = mobOff.filter(x => x !== t.dataset.sel); if (!t.checked) mobOff.push(t.dataset.sel);
+      store.set("mobAv", mobOff); refreshMobs(); return;
+    }
+    if (!editing) return;
+    if (t.dataset.krav) {
+      const n = t.dataset.krav; editing.krav = (editing.krav || []).filter(k => k !== n && k !== "!" + n);
+      if (t.value === "på") editing.krav.push(n); if (t.value === "av") editing.krav.push("!" + n);
+      editing.dirty = true; mobHint("Ändringarna är inte sparade."); return;
+    }
+    if (t.dataset.dim && editing.sel != null) {
+      const x = editing.mobler[editing.sel], k = t.dataset.dim;
+      if (k === "e") x.e = t.value; else if (+t.value >= 10) x[k] = +t.value;
+      changed();
+    }
+  });
+  $("mobSide").addEventListener("input", e => {
+    if (editing && e.target.id === "meNamn") { editing.namn = e.target.value; editing.dirty = true; mobHint("Ändringarna är inte sparade."); }
+  });
+  $("mobSide").addEventListener("click", async e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.ny) {
+      const [vaning, rum] = b.dataset.ny.split("|");
+      startEdit({ id: null, vaning, rum, namn: "Ny möblering", krav: [], mobler: [] }); editing.dirty = true; renderMob(); return;
+    }
+    if (b.dataset.red) { const m = mobs.find(x => x.id === b.dataset.red); if (m) startEdit(m); return; }
+    if (!editing) return;
+    if (b.dataset.add) {
+      const r = roomNow(editing.vaning, editing.rum); if (!r) return mobHint("Rummet finns inte med de lager som är valda.");
+      const T = TYP[b.dataset.add], an = anchorOf(r.g), c = labelPoint(r.g);
+      const x = { t: T.id, x: Math.round(c[0] - an[0]), y: Math.round(c[1] - an[1]), r: 0 };
+      if (T.fri) { x.w = T.w; x.d = T.d; }
+      editing.mobler.push(x); editing.sel = editing.mobler.length - 1; changed(); return;
+    }
+    const a = b.dataset.act, sel = editing.sel != null ? editing.mobler[editing.sel] : null;
+    if (a === "vrid" && sel) { sel.r = ((sel.r || 0) + 90) % 360; changed(); }
+    else if (a === "spegla" && sel) { sel.s = !sel.s; changed(); }
+    else if (a === "bort" && sel) { editing.mobler.splice(editing.sel, 1); editing.sel = null; changed(); }
+    else if (a === "spara") saveEdit(!editing.id);
+    else if (a === "sparasom") saveEdit(true);
+    else if (a === "avbryt") { if (editing.dirty && !confirm("Slänga ändringarna?")) return; editing = null; refreshMobs(); renderMob(); }
+    else if (a === "radera") {
+      if (!confirm(`Ta bort möbleringen ”${editing.namn}” i ${editing.rum}? Det går inte att ångra.`)) return;
+      try { await window.v23mobDb.remove(editing.id); editing = null; refreshMobs(); renderMob(); } catch (err) { console.error(err); mobHint("Kunde inte ta bort."); }
+    }
+  });
+
+  // dra möbler i den möblering som redigeras (före panoreringen, som annars tar musen)
+  svg.addEventListener("pointerdown", e => {
+    const h = editing && e.target.closest && e.target.closest("[data-mi]"); if (!h) return;
+    e.stopPropagation(); e.preventDefault();
+    editing.sel = +h.dataset.mi; const x = editing.mobler[editing.sel];
+    svg.setPointerCapture(e.pointerId);
+    mobDrag = { id: e.pointerId, p: toPlan(e.clientX, e.clientY), x: x.x, y: x.y, moved: false };
+    refreshMobs(); renderMob();
+  }, true);
+  svg.addEventListener("pointermove", e => {
+    if (!mobDrag || e.pointerId !== mobDrag.id) return;
+    e.stopPropagation();
+    const q = toPlan(e.clientX, e.clientY), x = editing.mobler[editing.sel];
+    x.x = Math.round(mobDrag.x + q[0] - mobDrag.p[0]); x.y = Math.round(mobDrag.y - (q[1] - mobDrag.p[1]));   // svg:ns y är nedåt
+    if (!mobDrag.moved) { mobDrag.moved = true; editing.dirty = true; }
+    refreshMobs();
+  }, true);
+  const mobUp = e => { if (!mobDrag || e.pointerId !== mobDrag.id) return; e.stopPropagation(); const moved = mobDrag.moved; mobDrag = null; if (moved) renderMob(); };
+  svg.addEventListener("pointerup", mobUp, true); svg.addEventListener("pointercancel", mobUp, true);
+
+  window.v23mob = {                                    // används av kontodelen
+    set(list) { mobs = list; refreshMobs(); renderMob(); },
+    access(read, write) { mobRead = read; mobWrite = write; if (!read) { mobs = []; editing = null; } refreshMobs(); renderMob(); },
+    start: () => MOB_START,
+  };
+
+  let mode = ["kalkyl", "bilder", "dokument", "moblering"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
   function setMode(m) {
     mode = m; store.set("view", m); $("mode").value = m;
-    const p = m === "plan", k = m === "kalkyl", b = m === "bilder", d = m === "dokument";
-    $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p;
+    const mb = m === "moblering", p = m === "plan" || mb, k = m === "kalkyl", b = m === "bilder", d = m === "dokument";
+    $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p; $("mobSide").hidden = !mb;
+    $("editBtn").hidden = mb; if (mb) { $("editor").hidden = true; renderMob(); }
     $("sheet").hidden = !k; $("kalkylSide").hidden = !k;
     $("gallery").hidden = !b; $("bilderSide").hidden = !b;
     $("docs").hidden = !d; $("dokSide").hidden = !d;
@@ -1945,7 +2178,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
 // window.v23konto = { user, roll, db } och händelsen "v23konto" när det ändras.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp, collection, addDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCDq2Ei9c88dPe2FZbItrkXfvMK0zMIGGY",
@@ -1981,6 +2214,7 @@ onAuthStateChanged(auth, async user => {
   el("kontoBtn").textContent = user ? "Logga ut" : "Logga in";
   dispatchEvent(new CustomEvent("v23konto", { detail: window.v23konto }));
   followPlan(user, roll);
+  followMob(user, roll);
 });
 
 // ---------- Planen i databasen: dokumentet planer/plan = { text, av, uppdaterad } ----------
@@ -2026,6 +2260,35 @@ el("kontoBtn").addEventListener("click", async () => {
     console.error(err);
   }
 });
+
+// ---------- Möbleringar i databasen: samlingen moblering ----------
+// Med läsrätt följs alla möbleringar. Är samlingen tom skapar den som har skrivrätt dagens möbler som möbleringar.
+const mobCol = collection(db, "moblering");
+let unsubMob = null, mobSeeding = false;
+function followMob(user, roll) {
+  if (unsubMob) { unsubMob(); unsubMob = null; }
+  const read = !!roll && roll !== "ingen", write = roll === "agare" || roll === "skriv";
+  window.v23mob.access(read, write);
+  if (!read) return;
+  unsubMob = onSnapshot(mobCol, async snap => {
+    if (snap.empty && write && !mobSeeding) {
+      mobSeeding = true;
+      const b = writeBatch(db);
+      for (const { id, ...m } of window.v23mob.start()) b.set(doc(mobCol, id), { ...m, av: user.email, uppdaterad: serverTimestamp() });
+      await b.commit().catch(err => console.error(err));
+      return;
+    }
+    window.v23mob.set(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  }, err => console.error(err));
+}
+window.v23mobDb = {
+  async save(id, data) {
+    const user = auth.currentUser, full = { ...data, av: user.email, uppdaterad: serverTimestamp() };
+    if (id) { await setDoc(doc(mobCol, id), full); return id; }
+    return (await addDoc(mobCol, full)).id;
+  },
+  remove: id => deleteDoc(doc(mobCol, id)),
+};
 </script>
 </body>
 </html>

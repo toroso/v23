@@ -7,6 +7,7 @@ Interaktiv planritning över lägenheten (undervåning och ovanvåning) med lage
 
 - **Lager**: Undervåning och Ovanvåning är våningar. Ändringar (WC2, Sovrum3_Stor, Sovrum3_90, Sovrum3_WC1, Sovrum3_Ruff, WC1, Kök, FastGarderobNere, TaBortGU) slås på och av var för sig; Sovrum3_Stor, Sovrum3_90, Sovrum3_WC1 och Sovrum3_Ruff är alternativ, bara en av dem kan vara på.
 - **Visa**: dörrar/fönster/öppningar, inredning, möbler, rumsnamn, mått och rutnät.
+- **Möblering** (väljs i rubriken, kräver inloggning): namngivna möbleringar per rum som kryssas i, gärna flera i samma rum. En möblering kan kräva att lager är på eller av. Redigera: lägg till möbler, dra dem, vrid 90°, Spara eller Spara som. Möbleringarna ligger i Firestore-samlingen `moblering` och delas; vilka som är ikryssade sparas i webbläsaren. Möbler i plantexten (`möbel …`) ritas inte längre.
 - **Redigera plan**: ändra texten direkt i sidan. Ändringar sparas lokalt i webbläsaren.
 - **Skriv ut**: skriver ut allt som är valt under Lager och Visa på A4, i största skalan av 1:50, 1:100 och 1:200 som får plats, med skalstock.
 - **Kopiera bild**: lägger planen som PNG på urklipp.
