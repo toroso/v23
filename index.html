@@ -282,6 +282,7 @@ a.btn[hidden] { display: none; }
   #print { display: block; }
 }
 .konto { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 14px 0; font-size: 13px; color: var(--muted); }
+.kontoSub { margin: -8px 0 14px; font-size: 12px; color: var(--muted); }
 .konto span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
 </head>
@@ -316,6 +317,7 @@ a.btn[hidden] { display: none; }
     </div>
     <div id="dokSide" hidden></div>
     <div class="konto" id="konto"><span id="kontoText">Inte inloggad</span><button id="kontoBtn" type="button">Logga in</button></div>
+    <div class="kontoSub" id="planKalla"></div>
     <label class="themepick">Utseende
       <select id="theme"><option value="light">Ljust</option><option value="dark">Mörkt</option><option value="system">Som systemet</option></select>
     </label>
@@ -339,7 +341,8 @@ a.btn[hidden] { display: none; }
       <header><h2>Plan</h2><button id="closeEd" type="button">Stäng</button></header>
       <textarea id="src" spellcheck="false"></textarea>
       <div class="row">
-        <button id="apply" class="primary" type="button">Rita om</button>
+        <button id="saveDb" class="primary" type="button" hidden>Spara</button>
+        <button id="apply" type="button">Rita om</button>
         <button id="copy" type="button">Kopiera text</button>
         <button id="reset" type="button">Återställ till inbyggd plan</button>
         <span class="hint" id="edHint">Ctrl + Enter ritar om</span>
@@ -1359,10 +1362,22 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     filters[k] = e.target.checked; store.set("filters", filters); draw();
   });
   $("fit").onclick = fit;
-  $("editBtn").onclick = () => { $("src").value = text; $("editor").hidden = false; $("src").focus(); };
+  let edBase = null;                                   // texten som redigeraren senast fick
+  $("editBtn").onclick = () => { $("src").value = text; edBase = text; $("editor").hidden = false; $("src").focus(); };
   $("closeEd").onclick = () => { $("editor").hidden = true; };
   const applyText = () => { text = $("src").value; store.set("text", text); store.set("base", EMBEDDED); compute(); $("edHint").textContent = "Omritad."; };
   $("apply").onclick = applyText;
+  // Används av kontodelen: läser in planen från databasen och ritar om.
+  window.v23plan = {
+    text: () => text,
+    apply: applyText,
+    load(t, note) {
+      const open = !$("editor").hidden, dirty = open && $("src").value !== edBase;
+      text = t; store.set("text", text); store.set("base", EMBEDDED); compute();
+      if (open && !dirty) { $("src").value = t; edBase = t; }
+      if (open && note) $("edHint").textContent = dirty ? note + " Dina ändringar i rutan är inte sparade." : note;
+    },
+  };
   $("src").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); applyText(); } });
   $("reset").onclick = () => { $("src").value = EMBEDDED; applyText(); $("edHint").textContent = "Inbyggd plan återställd."; };
   $("copy").onclick = async () => {
@@ -1930,7 +1945,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
 // window.v23konto = { user, roll, db } och händelsen "v23konto" när det ändras.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyCDq2Ei9c88dPe2FZbItrkXfvMK0zMIGGY",
@@ -1965,6 +1980,40 @@ onAuthStateChanged(auth, async user => {
   el("kontoText").title = el("kontoText").textContent;
   el("kontoBtn").textContent = user ? "Logga ut" : "Logga in";
   dispatchEvent(new CustomEvent("v23konto", { detail: window.v23konto }));
+  followPlan(user, roll);
+});
+
+// ---------- Planen i databasen: dokumentet planer/plan = { text, av, uppdaterad } ----------
+// Inloggad med läsrätt: planen hämtas och följs (ändringar från andra ritas direkt).
+// Med skrivrätt: Spara i redigeraren sparar. Finns inget dokument skapas det av den inbyggda planen.
+const planRef = doc(db, "planer", "plan");
+let unsubPlan = null;
+const when = ts => ts ? ts.toDate().toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" }) : "";
+function followPlan(user, roll) {
+  if (unsubPlan) { unsubPlan(); unsubPlan = null; }
+  const read = roll && roll !== "ingen", write = roll === "agare" || roll === "skriv";
+  el("saveDb").hidden = !write;
+  el("planKalla").textContent = user && !read ? "Planen visas som den ligger i sidan." : "";
+  if (!read) return;
+  unsubPlan = onSnapshot(planRef, async snap => {
+    if (snap.metadata.hasPendingWrites) return;
+    const d = snap.data();
+    if (!d) {
+      if (write) await setDoc(planRef, { text: window.v23plan.text(), av: user.email, uppdaterad: serverTimestamp() });
+      else el("planKalla").textContent = "Ingen plan sparad än; visar den inbyggda.";
+      return;
+    }
+    if (d.text !== window.v23plan.text()) window.v23plan.load(d.text, `Ny version från ${d.av}.`);
+    el("planKalla").textContent = `Plan sparad ${when(d.uppdaterad)} av ${d.av}`;
+  }, err => { console.error(err); el("planKalla").textContent = "Kunde inte hämta planen."; });
+}
+el("saveDb").addEventListener("click", async () => {
+  const user = auth.currentUser; if (!user) return;
+  window.v23plan.apply();
+  try {
+    await setDoc(planRef, { text: window.v23plan.text(), av: user.email, uppdaterad: serverTimestamp() });
+    el("edHint").textContent = "Sparad.";
+  } catch (err) { console.error(err); el("edHint").textContent = "Kunde inte spara."; }
 });
 
 el("kontoBtn").addEventListener("click", async () => {

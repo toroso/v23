@@ -22,3 +22,6 @@ Sidan ligger på https://vasav23.web.app (Firebase Hosting, projekt `vasav23`). 
 - **Logga in** (i sidomenyn): Google-inloggning. Behörigheten styrs av `firestore.rules`: ägaren står i reglerna,
   övriga i Firestore-dokumentet `config/roller` som `{ skriv: [...], las: [...] }` med e-post i små bokstäver.
   Den som inte står med kommer inte åt något i databasen.
+- **Planen i databasen**: inloggad med läsrätt hämtas planen från Firestore-dokumentet `planer/plan` och följs, så
+  ändringar från andra ritas direkt. Med skrivrätt sparar **Spara** i Redigera plan. Finns inget dokument skapas det
+  av planen i sidan. Ändras planen i `index.html` läses den in med "Återställ till inbyggd plan" och sedan Spara.
