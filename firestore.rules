@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Behörighet: ägaren står här; övriga står i dokumentet config/roller
+// som { skriv: ["e-post", ...], las: ["e-post", ...] } (e-post med små bokstäver).
+// Bara ägaren kan ändra config/roller. Den som inte står med kommer inte åt något.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function inloggad() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function epost() {
+      return request.auth.token.email.lower();
+    }
+    function agare() {
+      return inloggad() && epost() == 'torbjorn@kalin-urena.com';
+    }
+    function roller() {
+      return get(/databases/$(database)/documents/config/roller).data;
+    }
+    function harRoller() {
+      return exists(/databases/$(database)/documents/config/roller);
+    }
+    function kanSkriva() {
+      return agare() || (inloggad() && harRoller() && epost() in roller().get('skriv', []));
+    }
+    function kanLasa() {
+      return kanSkriva() || (inloggad() && harRoller() && epost() in roller().get('las', []));
+    }
+
+    match /config/roller {
+      allow read: if kanLasa();
+      allow write: if agare();
+    }
+
+    match /{samling}/{dok=**} {
+      allow read: if samling != 'config' && kanLasa();
+      allow write: if samling != 'config' && kanSkriva();
+    }
+  }
+}

@@ -14,3 +14,11 @@ Interaktiv planritning över lägenheten (undervåning och ovanvåning) med lage
 - **Dokument**: mäklarens bostadsbeskrivning, mätbevis och planritningar samt föreningens årsredovisning, stadgar, energideklaration och underhållsplan. Filerna ligger i `dokument/`.
 
 Formatet beskrivs överst i plantexten.
+
+## Firebase
+
+Sidan ligger på https://vasav23.web.app (Firebase Hosting, projekt `vasav23`). Publicera med `firebase deploy`.
+
+- **Logga in** (i sidomenyn): Google-inloggning. Behörigheten styrs av `firestore.rules`: ägaren står i reglerna,
+  övriga i Firestore-dokumentet `config/roller` som `{ skriv: [...], las: [...] }` med e-post i små bokstäver.
+  Den som inte står med kommer inte åt något i databasen.

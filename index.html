@@ -281,6 +281,8 @@ a.btn[hidden] { display: none; }
   .app { display: none !important; }
   #print { display: block; }
 }
+.konto { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 14px 0; font-size: 13px; color: var(--muted); }
+.konto span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -313,6 +315,7 @@ a.btn[hidden] { display: none; }
       <ul class="blist" id="bildExtra"></ul>
     </div>
     <div id="dokSide" hidden></div>
+    <div class="konto" id="konto"><span id="kontoText">Inte inloggad</span><button id="kontoBtn" type="button">Logga in</button></div>
     <label class="themepick">Utseende
       <select id="theme"><option value="light">Ljust</option><option value="dark">Mörkt</option><option value="system">Som systemet</option></select>
     </label>
@@ -660,9 +663,10 @@ lager Ovanvåning, vridning 180, förskjutning 890 1005      # Vardagsrum.9 i li
   fönster FönsterS5: Sovrum4.5 mitt, 180
 
   # Takfönster: 20 cm från väggen, 160 djupa på ritningen (200 på det lutande taket).
+  # Vardagsrum: 100 från vägg 5 och 35 mellan fönstren.
   inredning TakfönsterB8: Badrum.8 start 100, 100 x 160, takfönster, ut 0
   inredning TakfönsterV6a: Vardagsrum.6 start 100, 90 x 160, takfönster, ut -20
-  inredning TakfönsterV6b: Vardagsrum.6 start 220, 90 x 160, takfönster, ut -20
+  inredning TakfönsterV6b: Vardagsrum.6 start 225, 90 x 160, takfönster, ut -20
 
   # Dörrar
   dörr DörrSovrum4: Sovrum4.3 start 10, 80, in, gångjärn start      # i den sneda väggen
@@ -709,7 +713,7 @@ lager TaBortGU på Ovanvåning
   inredning TrappaUppe: Vardagsrum.9 slut 10, 90 x 280, trappa, pil från väggen
   fönster FönsterV9: Vardagsrum.7 start 10, 235
   inredning TakfönsterV6a: Vardagsrum.4 start 165, 90 x 160, takfönster, ut -20
-  inredning TakfönsterV6b: Vardagsrum.4 start 285, 90 x 160, takfönster, ut -20
+  inredning TakfönsterV6b: Vardagsrum.4 start 290, 90 x 160, takfönster, ut -20
   möbel Bäddsoffa: Vardagsrum.4 start 95, 140 x 100, bäddsoffa, utfälld 200, ut -10
   möbel SoffaSchäslong: Vardagsrum.4 start 285, 260 x 90, soffa, schäslong slut 200 x 90, ut -10
   möbel Skrivbord: Vardagsrum.7 start 50, 160 x 80, skrivbord, stol, ut -10
@@ -1919,6 +1923,60 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   compute();
   renderTillval(); renderCalc(); setMode(mode);
 })();
+</script>
+<script type="module">
+// ---------- Konto: Google-inloggning och behörighet (Firebase) ----------
+// Behörigheten avgörs av reglerna i firestore.rules; här visas bara vad den inloggade får göra.
+// window.v23konto = { user, roll, db } och händelsen "v23konto" när det ändras.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCDq2Ei9c88dPe2FZbItrkXfvMK0zMIGGY",
+  authDomain: "vasav23.firebaseapp.com",
+  projectId: "vasav23",
+  storageBucket: "vasav23.firebasestorage.app",
+  messagingSenderId: "997265113288",
+  appId: "1:997265113288:web:e73bcbbf920bac099be5fd",
+});
+const auth = getAuth(app), db = getFirestore(app);
+const AGARE = "torbjorn@kalin-urena.com";
+const ROLLNAMN = { agare: "ägare", skriv: "kan ändra", las: "kan läsa", ingen: "ingen behörighet" };
+const el = id => document.getElementById(id);
+
+async function rollFor(user) {
+  const e = user.email.toLowerCase(), ref = doc(db, "config", "roller");
+  if (e === AGARE) {                                  // ägaren skapar rollistan första gången
+    if (!(await getDoc(ref)).exists()) await setDoc(ref, { skriv: [], las: [] });
+    return "agare";
+  }
+  try {
+    const d = (await getDoc(ref)).data() || {};
+    return (d.skriv || []).includes(e) ? "skriv" : (d.las || []).includes(e) ? "las" : "ingen";
+  } catch { return "ingen"; }                         // reglerna nekar den som inte står med
+}
+
+onAuthStateChanged(auth, async user => {
+  let roll = null;
+  if (user) roll = await rollFor(user).catch(err => (console.error(err), "ingen"));
+  window.v23konto = { user, roll, db };
+  el("kontoText").textContent = user ? `${user.email} · ${ROLLNAMN[roll]}` : "Inte inloggad";
+  el("kontoText").title = el("kontoText").textContent;
+  el("kontoBtn").textContent = user ? "Logga ut" : "Logga in";
+  dispatchEvent(new CustomEvent("v23konto", { detail: window.v23konto }));
+});
+
+el("kontoBtn").addEventListener("click", async () => {
+  if (auth.currentUser) return signOut(auth);
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (err) {
+    if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") return;
+    el("kontoText").textContent = err.code === "auth/unauthorized-domain"
+      ? "Inloggning fungerar bara på vasav23.web.app" : "Inloggningen misslyckades";
+    console.error(err);
+  }
+});
 </script>
 </body>
 </html>
