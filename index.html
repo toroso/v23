@@ -1241,8 +1241,9 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     };
     $("layers").innerHTML = (kids.get("") || []).map(li).join("") || `<li class="opt off">Planen har inga lager.</li>`;
   }
+  const planView = () => $("mode").value === "plan";   // i Planlösning styrs möblerna bara av valen under Möblering
   function renderFilters() {
-    $("filters").innerHTML = FILTERS.map(([k, label]) =>
+    $("filters").innerHTML = FILTERS.filter(([k]) => !(k === "möbler" && planView())).map(([k, label]) =>
       `<label class="opt"><input type="checkbox" data-filter="${k}" ${filters[k] ? "checked" : ""}><span>${label}</span></label>`).join("");
   }
   function renderNotes() {
@@ -1317,7 +1318,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
           out.push(`<path class="arc${dm}" d="M${G.arc.map(S).join("L")}"/>`);
         }
       }
-      for (const o of f.objs.filter(o => (o.kind === "möbel" && (filters["möbler"] || o.edit != null)) || (o.kind === "inredning" && filters[o.typ === "takfönster" ? "väggobjekt" : "inredning"]))) {   // ovanpå väggar och öppningar
+      for (const o of f.objs.filter(o => (o.kind === "möbel" && (filters["möbler"] || planView() || o.edit != null)) || (o.kind === "inredning" && filters[o.typ === "takfönster" ? "väggobjekt" : "inredning"]))) {   // ovanpå väggar och öppningar
         const G = o.geo, P = pts => pts.map(S).join("L"), mc = (o.kind === "möbel" ? " mob" : "") + (o.typ === "takfönster" ? " dash" : "");
         if (G.outline) out.push(`<path class="furn${mc}" d="M${P(G.outline)}Z"/>`);
         for (const l of G.lines) out.push(`<path class="furnline${mc}" d="M${P(l)}"/>`);
@@ -1916,6 +1917,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     const mb = m === "moblering", p = m === "plan" || mb, k = m === "kalkyl", b = m === "bilder", d = m === "dokument";
     $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p; $("mobSide").hidden = !mb;
     $("editBtn").hidden = mb; if (mb) { $("editor").hidden = true; renderMob(); }
+    if (p && result.length) { renderFilters(); draw(); }
     $("sheet").hidden = !k; $("kalkylSide").hidden = !k;
     $("gallery").hidden = !b; $("bilderSide").hidden = !b;
     $("docs").hidden = !d; $("dokSide").hidden = !d;
