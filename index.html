@@ -633,11 +633,11 @@ lager Ovanvåning, vridning 180, förskjutning 890 1005      # Vardagsrum.9 i li
 
   # Fasta regler: Vardagsrum.14 (165, yttervägg) har samma x som Badrum.8; Vardagsrum.2 och .8 har samma x.
   # Gamla vägg 11–12 (200, 165) är egentligen 145 H 115 V 55 H 165 (nya 11–14).
-  # Diagonalen (15) går 150 i sidled (Sovrum4: 330 − 180) och 122,3 i höjdled så att vägg 6 blir 610:
-  # 193,5 lång, 50,8° från lodlinjen. (Förut: 230 lång, 40,7°.)
-  # Vägg 9 = 255 och vägg 17 = 65. Vägg 18 = 152,7 så att Sovrum4 hamnar 10 cm under Badrum.
-  # Vägg 6 (610?) tar y-felet, vägg 19 (150?) x-felet.
-  rum Vardagsrum: 90 H 140 V 90 H 65 V 110 H 610? H 200 V 190 H 255 H 190 V 145 H 115 V 55 H 165 H50.81 193.5 V50.81 10 H 65 V 152.7 H 150? V 250
+  # Uppmätt: vägg 6 = 610, 9 = 270, 18 = 150, 19 = 150 och diagonalen (15) 140 i sidled, 170 i höjdled
+  # (220,2 lång, 39,5° från lodlinjen).
+  # Uträknat så att rummet går ihop: vägg 10 = 145 (så att Sovrum4 hamnar 10 cm under Badrum),
+  # vägg 11 = 135 (−10) och vägg 3 = 105 (+15). Då ligger vägg 14 5 cm från Badrum.8.
+  rum Vardagsrum: 90 H 140 V 105 H 65 V 110 H 610 H 200 V 190 H 270 H 145 V 135 H 115 V 55 H 165 H39.47 220.2 V39.47 10 H 65 V 150 H 150 V 250
     Vardagsrum.20 mot Badrum.2, start 0
     Vardagsrum.20 tjocklek 10
 
@@ -646,8 +646,9 @@ lager Ovanvåning, vridning 180, förskjutning 890 1005      # Vardagsrum.9 i li
     GU.4 tjocklek 0
     GU.3 tjocklek 5
 
-  # Diagonalen är samma vägg som Vardagsrum.15. Vägg 2 = 190, vägg 4 = 180, vägg 5 = 312,3 (uträknad).
-  rum Sovrum4: 330 H 190 H50.81 193.5 H39.19 180 H 312.3
+  # Diagonalen är samma vägg som Vardagsrum.15 (samma triangel, 140 × 170). Vägg 2 = 190.
+  # Vägg 4 (190?, uppmätt 180) och vägg 5 = 360 är uträknade så att rummet går ihop.
+  rum Sovrum4: 330 H 190 H39.47 220.2 H50.53 190? H 360
     Sovrum4.3 mot Vardagsrum.15, start 0
     Sovrum4.3 tjocklek 10
     kontroll Sovrum4.1 mot Badrum.7, start 0
@@ -696,12 +697,12 @@ lager Ovanvåning, vridning 180, förskjutning 890 1005      # Vardagsrum.9 i li
   möbel Elpiano: Vardagsrum.8 start 0, 130 x 30, elpiano
 
 
-# GU rivs. Vardagsrum.3–6 (90, 65, 110, 610?) blir två väggar: 200 och 675?.
+# GU rivs. Vardagsrum.3–6 (105, 65, 110, 610) blir två väggar: 215 och 675.
 # Väggarna efter blir två nummer lägre, så det som sitter på dem flyttas med.
 # Vägg 4 börjar 65 cm tidigare än gamla vägg 6, så det som mäts från dess start får +65.
 lager TaBortGU på Ovanvåning
   ta bort GU
-  rum Vardagsrum: 90 H 140 V 200 H 675? H 200 V 190 H 255 H 190 V 145 H 115 V 55 H 165 H50.81 193.5 V50.81 10 H 65 V 152.7 H 150? V 250
+  rum Vardagsrum: 90 H 140 V 215 H 675 H 200 V 190 H 270 H 145 V 135 H 115 V 55 H 165 H39.47 220.2 V39.47 10 H 65 V 150 H 150 V 250
     Vardagsrum.18 mot Badrum.2, start 0
     Vardagsrum.18 tjocklek 10
   Sovrum4.3 mot Vardagsrum.13, start 0
