@@ -629,7 +629,7 @@ lager WC1 på Undervåning
 
 lager Kök på Undervåning
   öppning ÖppningMatsalKök: Kök.1 start 120, 295
-  inredning KökBänk1: Kök.1 start 120, 120 x 80, bänk, ut 20      # bardisk som sticker ut i Matsal
+  inredning KökBänk1: Kök.1 start 120, 140 x 80, bänk, ut 20      # bardisk som sticker ut i Matsal
 
 
 lager FastGarderobNere på Undervåning
@@ -1072,6 +1072,8 @@ function furnitureGeometry(o, P, d, m, s0) {     // ritas i väggens system: a l
       break;
     }
     case "rektangel": label = o.label || null; break;
+    case "barstol": outline = ell(w / 2, D / 2, w / 2, D / 2); break;
+    case "tv": label = null; break;
     case "säng": {                              // huvudänden mot väggen
       const ph = Math.min(40, D * .2);
       if (w >= 140) { const pw = (w - 16) / 2; lines.push(rect(5, 6, 5 + pw, 6 + ph), rect(11 + pw, 6, 11 + 2 * pw, 6 + ph)); }
@@ -1685,9 +1687,16 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     { id: "soffa", namn: "Soffa", typ: "soffa", w: 200, d: 90, fri: "w" },
     { id: "schäslong", namn: "Soffa med schäslong", typ: "soffa", w: 260, d: 90, chaise: { depth: 200, width: 90 }, spegel: true },
     { id: "bäddsoffa", namn: "Bäddsoffa", typ: "bäddsoffa", w: 140, d: 100, bed: 200 },
-    { id: "skrivbord120", namn: "Skrivbord 120", typ: "skrivbord", w: 120, d: 80, chair: true, keyboard: true },
-    { id: "skrivbord140", namn: "Skrivbord 140", typ: "skrivbord", w: 140, d: 80, chair: true, keyboard: true },
-    { id: "skrivbord160", namn: "Skrivbord 160", typ: "skrivbord", w: 160, d: 80, chair: true, keyboard: true },
+    { id: "skrivbord100", namn: "Skrivbord 100", typ: "skrivbord", w: 100, d: 60, fri: "wd", chair: true, keyboard: true },
+    { id: "skrivbord120", namn: "Skrivbord 120", typ: "skrivbord", w: 120, d: 80, fri: "wd", chair: true, keyboard: true },
+    { id: "skrivbord140", namn: "Skrivbord 140", typ: "skrivbord", w: 140, d: 80, fri: "wd", chair: true, keyboard: true },
+    { id: "skrivbord160", namn: "Skrivbord 160", typ: "skrivbord", w: 160, d: 80, fri: "wd", chair: true, keyboard: true },
+    { id: "byrå", namn: "Byrå", typ: "byrå", w: 100, d: 40, fri: "wd" },
+    { id: "skänk", namn: "Skänk", typ: "skänk", w: 129, d: 41, fri: "wd" },
+    { id: "chiffonjé", namn: "Chiffonjé", typ: "chiffonjé", w: 110, d: 55, fri: "wd" },
+    { id: "barstol", namn: "Barstol", typ: "barstol", w: 40, d: 40 },
+    { id: "tv", namn: "TV", typ: "tv", w: 140, d: 8, fri: "w" },
+    { id: "tvbänk", namn: "TV-bänk", typ: "tv-bänk", w: 140, d: 40, fri: "wd" },
     { id: "elpiano", namn: "Elpiano", typ: "elpiano", w: 130, d: 30 },
     { id: "rektangel", namn: "Rektangel", typ: "rektangel", w: 100, d: 60, fri: "wd", etikett: true },
   ];
@@ -1747,6 +1756,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       const furn = f.objs.filter(o => isFurn(o) && o.typ !== "takfönster");
       for (let a = 0; a < furn.length; a++) for (let b = a + 1; b < furn.length; b++) {
         if (!furn[a].mobItem && !furn[b].mobItem) continue;
+        if ([furn[a].typ, furn[b].typ].some(t => t === "tv" || t === "barstol")) continue;   // tv:n hänger på väggen, barstolar står in under bänken
         let ov = []; try { ov = window.polygonClipping.intersection([furn[a].geo.box.map(rnd)], [furn[b].geo.box.map(rnd)]); } catch (e) { }
         if (ov.reduce((s, poly) => s + area(poly[0]), 0) > 1) f.mobNotes.push(`${furn[a].name} och ${furn[b].name} överlappar`);
       }
@@ -1897,6 +1907,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     set(list) { mobs = list; refreshMobs(); renderMob(); },
     access(read, write) { mobRead = read; mobWrite = write; if (!read) { mobs = []; editing = null; } refreshMobs(); renderMob(); },
     start: () => MOB_START,
+    all: () => mobs,
   };
 
   let mode = ["kalkyl", "bilder", "dokument", "moblering"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
