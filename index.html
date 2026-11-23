@@ -302,6 +302,8 @@ a.btn[hidden] { display: none; }
 .msave { margin-top: 14px; }
 .mhit { fill: transparent; stroke: none; cursor: move; pointer-events: all; }
 .mhit.on { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+.locked { display: grid; place-items: center; padding: 40px; color: var(--muted); }
+.locked[hidden] { display: none; }
 .konto { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 14px 0; font-size: 13px; color: var(--muted); }
 .kontoSub { margin: -8px 0 14px; font-size: 12px; color: var(--muted); }
 .konto span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -390,6 +392,7 @@ a.btn[hidden] { display: none; }
       <div class="vthumbs" id="vThumbs"></div>
     </section>
   </main>
+  <main class="locked" id="locked" hidden><p id="lockedText"></p></main>
   <main class="docs" id="docs" hidden>
     <div class="dbar"><div><b id="dTitle"></b><small id="dSub"></small></div><span class="sp"></span><a class="btn" id="dOpen" target="_blank" rel="noopener">Öppna i ny flik</a><a class="btn" id="dDown" download>Ladda ner</a></div>
     <div class="dbody" id="dBody"></div>
@@ -1207,7 +1210,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     set(k, v) { try { localStorage.setItem("planlosning." + k, JSON.stringify(v)); } catch (e) { } },
   };
   const FILTERS = [
-    ["väggobjekt", "Dörrar, fönster och öppningar", true], ["inredning", "Inredning", true], ["möbler", "Möbler", true],
+    ["väggobjekt", "Dörrar, fönster och öppningar", true], ["inredning", "Inredning", true],
     ["namn", "Rumsnamn och yta", true], ["mått", "Väggnummer och mått", true], ["rutnät", "Rutnät, 1 m", true],
   ];
   let text = store.get("base", null) === EMBEDDED ? store.get("text", EMBEDDED) : EMBEDDED;
@@ -1241,14 +1244,14 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     };
     $("layers").innerHTML = (kids.get("") || []).map(li).join("") || `<li class="opt off">Planen har inga lager.</li>`;
   }
-  const planView = () => $("mode").value === "plan";   // i Planlösning styrs möblerna bara av valen under Möblering
+  const planView = () => $("mode").value !== "moblering";   // möbler ritas bara i Möblering
   function renderFilters() {
-    $("filters").innerHTML = FILTERS.filter(([k]) => !(k === "möbler" && planView())).map(([k, label]) =>
+    $("filters").innerHTML = FILTERS.map(([k, label]) =>
       `<label class="opt"><input type="checkbox" data-filter="${k}" ${filters[k] ? "checked" : ""}><span>${label}</span></label>`).join("");
   }
   function renderNotes() {
     const items = plan.errors.map(m => ["err", m]);
-    for (const f of result) for (const n of [...f.notes, ...(f.mobNotes || [])]) {
+    for (const f of result) for (const n of [...f.notes, ...(planView() ? [] : f.mobNotes || [])]) {
       const cls = /Krock|överlappar|bara \d+ cm|finns inte|saknar|ryms inte|skiljer/.test(n) ? "warn" : "";
       items.push([cls, result.length > 1 ? `${f.floor}: ${n.trim()}` : n.trim()]);
     }
@@ -1318,7 +1321,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
           out.push(`<path class="arc${dm}" d="M${G.arc.map(S).join("L")}"/>`);
         }
       }
-      for (const o of f.objs.filter(o => (o.kind === "möbel" && (filters["möbler"] || planView() || o.edit != null)) || (o.kind === "inredning" && filters[o.typ === "takfönster" ? "väggobjekt" : "inredning"]))) {   // ovanpå väggar och öppningar
+      for (const o of f.objs.filter(o => (o.kind === "möbel" && !planView()) || (o.kind === "inredning" && filters[o.typ === "takfönster" ? "väggobjekt" : "inredning"]))) {   // ovanpå väggar och öppningar
         const G = o.geo, P = pts => pts.map(S).join("L"), mc = (o.kind === "möbel" ? " mob" : "") + (o.typ === "takfönster" ? " dash" : "");
         if (G.outline) out.push(`<path class="furn${mc}" d="M${P(G.outline)}Z"/>`);
         for (const l of G.lines) out.push(`<path class="furnline${mc}" d="M${P(l)}"/>`);
@@ -1906,7 +1909,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
 
   window.v23mob = {                                    // används av kontodelen
     set(list) { mobs = list; refreshMobs(); renderMob(); },
-    access(read, write) { mobRead = read; mobWrite = write; if (!read) { mobs = []; editing = null; } refreshMobs(); renderMob(); },
+    access(read, write) { mobRead = read; mobWrite = write; if (!read) { mobs = []; editing = null; } refreshMobs(); setMode(mode); },
     start: () => MOB_START,
     all: () => mobs,
   };
@@ -1914,10 +1917,14 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   let mode = ["kalkyl", "bilder", "dokument", "moblering"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
   function setMode(m) {
     mode = m; store.set("view", m); $("mode").value = m;
-    const mb = m === "moblering", p = m === "plan" || mb, k = m === "kalkyl", b = m === "bilder", d = m === "dokument";
+    // Planlösning, Bilder och Dokument är öppna för alla; övriga flikar kräver inloggning med behörighet.
+    const lock = !["plan", "bilder", "dokument"].includes(m) && !mobRead;
+    const mb = m === "moblering" && !lock, p = m === "plan" || mb, k = m === "kalkyl" && !lock, b = m === "bilder", d = m === "dokument";
+    $("locked").hidden = !lock;
+    if (lock) $("lockedText").textContent = window.v23konto && window.v23konto.user ? "Du har inte behörighet till den här fliken." : "Logga in (i sidomenyn) för att se den här fliken.";
     $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p; $("mobSide").hidden = !mb;
     $("editBtn").hidden = mb; if (mb) { $("editor").hidden = true; renderMob(); }
-    if (p && result.length) { renderFilters(); draw(); }
+    if (p && result.length) { renderFilters(); renderNotes(); draw(); }
     $("sheet").hidden = !k; $("kalkylSide").hidden = !k;
     $("gallery").hidden = !b; $("bilderSide").hidden = !b;
     $("docs").hidden = !d; $("dokSide").hidden = !d;
