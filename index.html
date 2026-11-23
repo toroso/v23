@@ -1808,7 +1808,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
 
   window.v23mob = {                                    // används av kontodelen
     set(list) { mobs = list; refreshMobs(); renderMob(); },
-    access(read, write) { mobRead = read; mobWrite = write; if (!read) { mobs = []; editing = null; } refreshMobs(); setMode(mode); },
+    access(read, write) { mobRead = read; mobWrite = write; if (!read) { mobs = []; editing = null; } refreshMobs(); setMode(mode, null); },
     start: () => MOB_START,
     all: () => mobs,
   };
@@ -2015,9 +2015,14 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     people(list) { personer = list; renderBoard(); },
   };
 
-  let mode = ["kalkyl", "bilder", "dokument", "moblering", "todo"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
-  function setMode(m) {
+  // djuplänkar: /plan, /furniture, /todo, /budget, /images, /documents; utan sökväg visas senast valda vy
+  const VYLANK = { plan: "plan", moblering: "furniture", todo: "todo", kalkyl: "budget", bilder: "images", dokument: "documents" };
+  const vyFranLank = () => Object.keys(VYLANK).find(k => VYLANK[k] === location.pathname.split("/").filter(Boolean)[0]?.toLowerCase());
+  let mode = vyFranLank() || (Object.keys(VYLANK).includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan");
+  function setMode(m, hist = "push") {
     mode = m; store.set("view", m); $("mode").value = m;
+    const lank = "/" + VYLANK[m];
+    if (hist && location.protocol.startsWith("http") && location.pathname !== lank) history[hist === "push" ? "pushState" : "replaceState"](null, "", lank + location.search + location.hash);
     // Planlösning, Bilder och Dokument är öppna för alla; övriga flikar kräver inloggning med behörighet.
     const lock = !["plan", "bilder", "dokument"].includes(m) && !mobRead;
     const mb = m === "moblering" && !lock, p = m === "plan" || mb, k = m === "kalkyl" && !lock, b = m === "bilder", d = m === "dokument", t = m === "todo" && !lock;
@@ -2133,6 +2138,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   $("vStage").addEventListener("pointerdown", e => { swipeX = e.clientX; });
   $("vStage").addEventListener("pointerup", e => { if (swipeX !== null && Math.abs(e.clientX - swipeX) > 50) step(e.clientX < swipeX ? 1 : -1); swipeX = null; });
   $("mode").onchange = e => setMode(e.target.value);
+  addEventListener("popstate", () => { const m = vyFranLank(); if (m && m !== mode) setMode(m, null); });
 
   // ---------- dokument: mäklarens PDF:er, planritningarna och föreningens underhållsplan ----------
   // Underhållsplanen kommer från föreningens kalkylark: [senast genomfört, vad, intervall, planerat år, uppskattad kostnad]
@@ -2291,7 +2297,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
 
   if (!window.polygonClipping) window.polygonClipping = { intersection: () => [], union: () => { throw 0; } };
   compute();
-  renderTillval(); renderCalc(); setMode(mode);
+  renderTillval(); renderCalc(); setMode(mode, "replace");
 })();
 </script>
 <script type="module">

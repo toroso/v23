@@ -30,6 +30,28 @@
             "value": "no-cache"
           }
         ]
+      },
+      {
+        "regex": "^/(plan|furniture|todo|budget|images|documents)$",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "regex": "^/(plan|furniture|todo|budget|images|documents)$",
+        "destination": "/index.html"
+      }
+    ],
+    "redirects": [
+      {
+        "regex": "^/(plan|furniture|todo|budget|images|documents)/+$",
+        "destination": "/:1",
+        "type": 301
       }
     ]
   }
