@@ -32,7 +32,7 @@
         ]
       },
       {
-        "regex": "^/(plan|furniture|todo|budget|images|documents)(/[^/]+)?$",
+        "regex": "^/(plan|furniture|todo|budget|images|documents|inspiration)(/[^/]+){0,2}$",
         "headers": [
           {
             "key": "Cache-Control",
@@ -43,13 +43,13 @@
     ],
     "rewrites": [
       {
-        "regex": "^/(plan|furniture|todo|budget|images|documents)(/[^/]+)?$",
+        "regex": "^/(plan|furniture|todo|budget|images|documents|inspiration)(/[^/]+){0,2}$",
         "destination": "/index.html"
       }
     ],
     "redirects": [
       {
-        "regex": "^/(plan|furniture|todo|budget|images|documents)((?:/[^/]+)?)/+$",
+        "regex": "^/(plan|furniture|todo|budget|images|documents|inspiration)((?:/[^/]+){0,2})/+$",
         "destination": "/:1:2",
         "type": 301
       }

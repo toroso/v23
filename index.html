@@ -333,6 +333,24 @@ a.btn[hidden] { display: none; }
 .nylapp input { width: 100%; font: inherit; font-size: .88rem; padding: 6px 8px; border: 1px dashed var(--rule); border-radius: 6px; background: transparent; color: var(--ink); }
 .tfilter { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 6px 0; font-size: .88rem; }
 .tfilter select { font: inherit; font-size: .85rem; max-width: 60%; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 3px 6px; }
+.insp { overflow: auto; background: var(--paper); padding-bottom: 18px; }
+.insp[hidden] { display: none; }
+.ibar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 16px 6px; }
+.ibar .count { color: var(--muted); font-size: .85rem; }
+.ibar .sp, .inspdlg .sp { flex: 1; }
+.igrid { padding: 6px 16px; columns: 230px; column-gap: 12px; }
+.icard { break-inside: avoid; margin: 0 0 12px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; cursor: pointer; }
+.icard:hover, .icard:focus-visible { border-color: var(--muted); }
+.icard img { display: block; width: 100%; height: auto; }
+.icard figcaption { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 6px 8px; font-size: .82rem; }
+.ikom { flex-basis: 100%; overflow-wrap: anywhere; }
+.itum { font-size: .8rem; border: 1px solid var(--rule); border-radius: 12px; padding: 1px 8px; background: transparent; color: var(--ink); }
+.itum.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.bitem.on { color: var(--accent); font-weight: 600; }
+.inspdlg { width: min(980px, 96vw) !important; }
+.istage { display: flex; justify-content: center; background: #15171b; border-radius: 8px; margin: 10px 0; }
+.istage img { max-width: 100%; max-height: 62vh; object-fit: contain; display: block; }
+.inspdlg textarea, .inspdlg .drow input { flex: 1; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 5px 8px; }
 .lappdlg { width: min(640px, 94vw); max-height: 90vh; border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; background: var(--panel); color: var(--ink); }
 .lappdlg::backdrop { background: rgba(0,0,0,.35); }
 .dlghead { display: flex; gap: 8px; align-items: center; }
@@ -360,7 +378,7 @@ a.btn[hidden] { display: none; }
 <body>
 <div class="app">
   <aside class="side">
-    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="moblering">Möblering</option><option value="todo">Att göra</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option><option value="dokument">Dokument</option></select></h1>
+    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="moblering">Möblering</option><option value="todo">Att göra</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option><option value="inspiration">Inspiration</option><option value="dokument">Dokument</option></select></h1>
     <div id="planSide">
       <h2>Lager</h2>
       <ul class="tree" id="layers"></ul>
@@ -389,6 +407,7 @@ a.btn[hidden] { display: none; }
     <div id="dokSide" hidden></div>
     <div id="mobSide" hidden></div>
     <div id="todoSide" hidden></div>
+    <div id="inspSide" hidden></div>
     <div class="konto" id="konto"><span id="kontoText">Inte inloggad</span><button id="kontoBtn" type="button">Logga in</button></div>
     <div class="kontoSub" id="planKalla"></div>
     <label class="themepick">Utseende
@@ -442,6 +461,7 @@ a.btn[hidden] { display: none; }
     </section>
   </main>
   <main class="board" id="board" hidden aria-label="Att göra"></main>
+  <main class="insp" id="insp" hidden aria-label="Inspiration"></main>
   <main class="locked" id="locked" hidden><p id="lockedText"></p></main>
   <main class="docs" id="docs" hidden>
     <div class="dbar"><div><b id="dTitle"></b><small id="dSub"></small></div><span class="sp"></span><a class="btn" id="dOpen" target="_blank" rel="noopener">Öppna i ny flik</a><a class="btn" id="dDown" download>Ladda ner</a></div>
@@ -450,6 +470,7 @@ a.btn[hidden] { display: none; }
 </div>
 <div id="print" aria-hidden="true"></div>
 <dialog id="lappDlg" class="lappdlg" aria-label="Lapp"></dialog>
+<dialog id="inspDlg" class="lappdlg inspdlg" aria-label="Inspirationsbild"></dialog>
 
 <script type="text/plain" id="plandata"># Planlösning. Mått i cm, innermått.
 # Rum beskrivs medurs från övre vänstra hörnet, första väggen åt höger (öster).
@@ -2016,19 +2037,188 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     people(list) { personer = list; renderBoard(); },
   };
 
+  // ---------- Inspiration: egna bilder per rum, inklistrade och krympta i webbläsaren ----------
+  // bild = { tumme (liten data-URL), rum: [], kommentar, kalla, tummar: { e-post: 1 | -1 | 0 }, skapadAv, skapad }
+  // Den stora bilden ligger i inspirationBild/<id> och hämtas först när bilden öppnas.
+  let insp = [], iRum = store.get("inspRum", ""), iSort = store.get("inspSort", "ny"), iOpen = null;
+  const OSORT = "_";                                           // osorterat; "" = alla bilder
+  const bildCache = new Map();
+  const minEpost = () => window.v23konto?.user?.email || "";
+  const rumNamn = r => r === "" ? "Alla bilder" : r === OSORT ? "Osorterat" : r;
+  const tumSumma = b => { const v = Object.values(b.tummar || {}); return [v.filter(x => x > 0).length, v.filter(x => x < 0).length]; };
+  const iLista = () => {
+    const tid = b => b.skapad?.toMillis?.() ?? Date.now();      // nyss inlagd: tiden är inte satt än
+    const poang = b => Object.values(b.tummar || {}).reduce((s, v) => s + v, 0);
+    return insp.filter(b => iRum === "" || (iRum === OSORT ? !(b.rum || []).length : (b.rum || []).includes(iRum)))
+      .sort((a, b) => (iSort === "gillad" ? poang(b) - poang(a) : 0) || tid(b) - tid(a));
+  };
+
+  function renderInspSide() {
+    const n = r => insp.filter(b => r === OSORT ? !(b.rum || []).length : (b.rum || []).includes(r)).length;
+    const item = (r, t, k) => `<li><button type="button" class="bitem${r === iRum ? " on" : ""}" data-irum="${esc(r)}">${esc(t)}<span>${k || ""}</span></button></li>`;
+    $("inspSide").innerHTML = `<ul class="blist">${item("", "Alla bilder", insp.length)}${item(OSORT, "Osorterat", n(OSORT))}</ul>` +
+      [...mobRooms()].map(([f, set]) => `<h2>${esc(f)}</h2><ul class="blist">${[...set].sort((a, b) => a.localeCompare(b, "sv")).map(r => item(r, r, n(r))).join("")}</ul>`).join("") +
+      (mobWrite ? "" : `<p class="mhint">Du kan titta men inte ändra.</p>`);
+  }
+
+  function renderInsp() {
+    renderInspSide();
+    const list = iLista(), me = minEpost();
+    const dit = iRum && iRum !== OSORT ? iRum : "Osorterat";
+    $("insp").innerHTML = `<div class="ibar"><b>${esc(rumNamn(iRum))}</b><span class="count">${list.length} ${list.length === 1 ? "bild" : "bilder"}</span><span class="sp"></span>
+        <div class="seg" role="group" aria-label="Ordning"><button type="button" data-isort="ny" class="${iSort === "ny" ? "on" : ""}">Nyast</button><button type="button" data-isort="gillad" class="${iSort === "gillad" ? "on" : ""}">Mest gillad</button></div></div>
+      ${mobWrite ? `<p class="ghint">Kopiera en bild (på Pinterest: högerklicka på bilden och välj Kopiera bild) och klistra in här med Ctrl+V. Den hamnar i ${esc(dit)}.</p>` : ""}
+      <div class="igrid">${list.map(b => {
+        const [u, d] = tumSumma(b), mine = (b.tummar || {})[me] || 0;
+        return `<figure class="icard" data-insp="${esc(b.id)}" tabindex="0"><img src="${esc(b.tumme)}" alt="${esc(b.kommentar || "Inspirationsbild")}" loading="lazy">
+          <figcaption>${b.kommentar ? `<span class="ikom">${esc(b.kommentar)}</span>` : ""}
+            <button type="button" class="itum${mine > 0 ? " on" : ""}" data-tum="1" aria-label="Tumme upp"${mobWrite ? "" : " disabled"}>👍 ${u}</button>
+            <button type="button" class="itum${mine < 0 ? " on" : ""}" data-tum="-1" aria-label="Tumme ner"${mobWrite ? "" : " disabled"}>👎 ${d}</button>
+            ${iRum === "" ? (b.rum || []).map(r => `<span class="tchip rum" style="--h:${hue(r)}">${esc(r)}</span>`).join("") : ""}</figcaption></figure>`;
+      }).join("") || `<p class="mhint">Inga bilder här ännu.</p>`}</div>`;
+  }
+
+  async function renderInspDlg() {
+    const b = insp.find(x => x.id === iOpen), dlg = $("inspDlg");
+    if (!b) { if (dlg.open) dlg.close(); return; }
+    const ro = mobWrite ? "" : " disabled", list = iLista(), i = list.findIndex(x => x.id === b.id);
+    const [u, d] = tumSumma(b), mine = (b.tummar || {})[minEpost()] || 0;
+    const vem = v => Object.entries(b.tummar || {}).filter(([, x]) => x === v).map(([e]) => esc(namnAv(e))).join(", ");
+    const rumLista = allaRum().filter(r => !(b.rum || []).includes(r));
+    const lank = /^https?:/.test(b.kalla || "");
+    dlg.innerHTML = `<div class="dlghead"><b>${esc(rumNamn(iRum))}${i >= 0 ? ` · ${i + 1} / ${list.length}` : ""}</b><span class="sp"></span>
+        <button type="button" data-istep="-1" aria-label="Föregående bild"${list.length < 2 ? " disabled" : ""}>‹</button>
+        <button type="button" data-istep="1" aria-label="Nästa bild"${list.length < 2 ? " disabled" : ""}>›</button>
+        <button type="button" data-iact="stang" aria-label="Stäng">✕</button></div>
+      <div class="istage"><img id="iBig" src="${esc(bildCache.get(b.id) || b.tumme)}" alt="${esc(b.kommentar || "Inspirationsbild")}"></div>
+      <div class="drow"><button type="button" class="itum${mine > 0 ? " on" : ""}" data-tum="1" aria-label="Tumme upp"${ro}>👍 ${u}</button>
+        <button type="button" class="itum${mine < 0 ? " on" : ""}" data-tum="-1" aria-label="Tumme ner"${ro}>👎 ${d}</button>
+        <span class="mhint">${[u ? "Gillas av " + vem(1) : "", d ? "Gillas inte av " + vem(-1) : ""].filter(Boolean).join(". ")}</span></div>
+      <div class="drow"><span class="dlbl">Rum</span><div class="dchips">${(b.rum || []).map(r => `<span class="tchip rum" style="--h:${hue(r)}">${esc(r)}${mobWrite ? `<button type="button" data-idelrum="${esc(r)}" aria-label="Ta bort ${esc(r)}">×</button>` : ""}</span>`).join("") || `<span class="mhint">Osorterat</span>`}
+        ${mobWrite ? `<select data-iaddrum><option value="">+ Rum</option>${rumLista.map(r => `<option>${esc(r)}</option>`).join("")}</select>` : ""}</div></div>
+      <div class="drow"><span class="dlbl">Kommentar</span><textarea data-if="kommentar" rows="2" placeholder="Vad är det du gillar?"${ro}>${esc(b.kommentar || "")}</textarea></div>
+      <div class="drow"><span class="dlbl">Källa</span><input data-if="kalla" value="${esc(b.kalla || "")}" placeholder="https://…"${ro}>${lank ? `<a href="${esc(b.kalla)}" target="_blank" rel="noopener">Öppna</a>` : ""}</div>
+      <div class="dfoot"><small>${b.skapadAv ? "Inlagd av " + esc(namnAv(b.skapadAv)) + (b.skapad ? ", " + esc(b.skapad.toDate().toLocaleDateString("sv-SE")) : "") : ""}</small>
+        ${mobWrite ? `<button type="button" data-iact="tabort">Ta bort bild</button>` : ""}</div>`;
+    if (!dlg.open) dlg.showModal();
+    if (!bildCache.has(b.id)) {
+      const full = await window.v23inspDb.bild(b.id).catch(err => { console.error(err); return null; });
+      if (full) { bildCache.set(b.id, full); if (iOpen === b.id && $("iBig")) $("iBig").src = full; }
+    }
+  }
+
+  // krymp i webbläsaren: lång sida högst max px, WebP (JPEG där WebP saknas), under ~650 kB så att den ryms i ett Firestore-dokument
+  async function krymp(blob, max, kvalitet) {
+    const bmp = await createImageBitmap(blob);
+    let s = Math.min(1, max / Math.max(bmp.width, bmp.height)), url = "";
+    for (let i = 0; i < 6; i++) {
+      const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(bmp.width * s)); c.height = Math.max(1, Math.round(bmp.height * s));
+      c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+      url = c.toDataURL("image/webp", kvalitet);
+      if (!url.startsWith("data:image/webp")) url = c.toDataURL("image/jpeg", kvalitet);
+      if (url.length < 900000) break;
+      s *= .8;
+    }
+    bmp.close?.();
+    return url;
+  }
+  async function laggTill(blob, kalla) {
+    if (!mobWrite) return;
+    toast("Sparar bilden …");
+    try {
+      const [full, tumme] = await Promise.all([krymp(blob, 1600, .82), krymp(blob, 480, .72)]);
+      await window.v23inspDb.add({ tumme, rum: iRum && iRum !== OSORT ? [iRum] : [], kommentar: "", kalla: kalla || "", tummar: {} }, full);
+      toast("Bilden är sparad.");
+    } catch (err) { console.error(err); toast("Kunde inte spara bilden."); }
+  }
+  document.addEventListener("paste", async e => {
+    if (mode !== "inspiration" || !mobWrite || !e.clipboardData) return;
+    const cd = e.clipboardData;
+    const filer = [...cd.items].filter(it => it.kind === "file" && it.type.startsWith("image/")).map(it => it.getAsFile()).filter(Boolean);
+    const src = new DOMParser().parseFromString(cd.getData("text/html") || "", "text/html").querySelector("img")?.getAttribute("src") || "";
+    const text = cd.getData("text/plain").trim();
+    const kalla = /^https?:/.test(src) ? src : /^https?:/.test(text) ? text : "";
+    if (filer.length) { e.preventDefault(); for (const f of filer) await laggTill(f, kalla); return; }
+    const a = document.activeElement;
+    if (!kalla || (a && /INPUT|TEXTAREA/.test(a.tagName))) return;   // vanlig text i ett fält
+    e.preventDefault();
+    try {
+      const r = await fetch(kalla), b = await r.blob();
+      if (!r.ok || !b.type.startsWith("image/")) throw new Error("ingen bild");
+      await laggTill(b, kalla);
+    } catch { toast("Kunde inte hämta bilden. Högerklicka på bilden och välj Kopiera bild i stället."); }
+  });
+
+  const iUpd = (id, patch) => window.v23inspDb.update(id, patch).catch(err => { console.error(err); toast("Kunde inte spara."); });
+  const tumma = (b, v) => { const me = minEpost(); if (me) iUpd(b.id, { tummar: { [me]: ((b.tummar || {})[me] || 0) === v ? 0 : v } }); };
+  const openInsp = id => { iOpen = id; renderInspDlg(); syncUrl(); };
+  $("inspSide").addEventListener("click", e => {
+    const b = e.target.closest("[data-irum]"); if (!b) return;
+    iRum = b.dataset.irum; store.set("inspRum", iRum); renderInsp(); syncUrl();
+  });
+  $("insp").addEventListener("click", e => {
+    const s = e.target.closest("[data-isort]"); if (s) { iSort = s.dataset.isort; store.set("inspSort", iSort); renderInsp(); return; }
+    const card = e.target.closest("[data-insp]"), b = card && insp.find(x => x.id === card.dataset.insp); if (!b) return;
+    const t = e.target.closest("[data-tum]"); if (t) { if (mobWrite) tumma(b, +t.dataset.tum); return; }
+    openInsp(b.id);
+  });
+  $("insp").addEventListener("keydown", e => {
+    const c = e.target.closest?.("[data-insp]");
+    if (c && e.target === c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openInsp(c.dataset.insp); }
+  });
+  const iSteg = d => {
+    const list = iLista(), i = list.findIndex(x => x.id === iOpen), nx = list[(i + d + list.length) % list.length];
+    if (nx && nx.id !== iOpen) { iOpen = nx.id; renderInspDlg(); syncUrl("replace"); }
+  };
+  $("inspDlg").addEventListener("close", () => { iOpen = null; syncUrl(); });
+  $("inspDlg").addEventListener("click", async e => {
+    const t = e.target.closest("button"), b = insp.find(x => x.id === iOpen); if (!t || !b) return;
+    if (t.dataset.istep) return iSteg(+t.dataset.istep);
+    if (t.dataset.tum) { if (mobWrite) tumma(b, +t.dataset.tum); return; }
+    if (t.dataset.idelrum) return iUpd(b.id, { rum: (b.rum || []).filter(r => r !== t.dataset.idelrum) });
+    if (t.dataset.iact === "stang") return $("inspDlg").close();
+    if (t.dataset.iact === "tabort") {
+      if (!confirm("Ta bort bilden för alla? Det går inte att ångra.")) return;
+      $("inspDlg").close();
+      window.v23inspDb.remove(b.id).catch(err => { console.error(err); toast("Kunde inte ta bort."); });
+    }
+  });
+  $("inspDlg").addEventListener("change", e => {
+    const t = e.target, b = insp.find(x => x.id === iOpen); if (!b || !mobWrite) return;
+    if (t.dataset.if) iUpd(b.id, { [t.dataset.if]: t.value.trim() });
+    else if (t.hasAttribute("data-iaddrum") && t.value) iUpd(b.id, { rum: [...(b.rum || []), t.value] });
+  });
+  $("inspDlg").addEventListener("keydown", e => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === "ArrowLeft") { e.preventDefault(); iSteg(-1); } else if (e.key === "ArrowRight") { e.preventDefault(); iSteg(1); }
+  });
+  window.v23insp = {                                          // används av kontodelen
+    set(list) {
+      insp = list;
+      if (mode !== "inspiration") return;
+      renderInsp();
+      const a = document.activeElement;
+      if (iOpen && !(a && $("inspDlg").contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) renderInspDlg();
+    },
+  };
+
   // djuplänkar: /plan, /furniture, /todo, /budget, /images, /documents; utan sökväg visas senast valda vy.
-  // Andra ledet visar vad som är öppet: /todo/<lapp-id>, /images/<rum>, /documents/<dokument-id>.
-  const VYLANK = { plan: "plan", moblering: "furniture", todo: "todo", kalkyl: "budget", bilder: "images", dokument: "documents" };
+  // Andra ledet visar vad som är öppet: /todo/<lapp-id>, /images/<rum>, /documents/<dokument-id>, /inspiration/<rum>/<bild-id>.
+  const VYLANK = { plan: "plan", moblering: "furniture", todo: "todo", kalkyl: "budget", bilder: "images", dokument: "documents", inspiration: "inspiration" };
   const lankDelar = () => location.pathname.split("/").filter(Boolean).map(x => { try { return decodeURIComponent(x); } catch { return x; } });
   const vyFranLank = () => Object.keys(VYLANK).find(k => VYLANK[k] === lankDelar()[0]?.toLowerCase());
   const slug = t => t.toLowerCase().normalize("NFD").split("").filter(c => c.charCodeAt(0) < 128).join("").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   let routing = false;
   function lankNu() {
-    let sub = "";
-    if (mode === "dokument") sub = dokId;
-    else if (mode === "bilder" && !$("viewer").hidden && vCat) sub = slug(vCat);
-    else if (mode === "todo" && lappOpen) sub = lappOpen;
-    return "/" + VYLANK[mode] + (sub ? "/" + encodeURIComponent(sub) : "");
+    const sub = [];
+    if (mode === "dokument") sub.push(dokId);
+    else if (mode === "bilder" && !$("viewer").hidden && vCat) sub.push(slug(vCat));
+    else if (mode === "todo" && lappOpen) sub.push(lappOpen);
+    else if (mode === "inspiration") {
+      if (iRum || iOpen) sub.push(iRum === OSORT ? "osorterat" : iRum ? slug(iRum) : "alla");
+      if (iOpen) sub.push(iOpen);
+    }
+    return "/" + [VYLANK[mode], ...sub].map(encodeURIComponent).join("/");
   }
   function syncUrl(hist = "push") {
     if (routing || !hist || !location.protocol.startsWith("http")) return;
@@ -2048,6 +2238,13 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
         if (sub) { if (sub !== lappOpen) { lappOpen = sub; descEdit = false; renderDlg(); } }
         else if ($("lappDlg").open) $("lappDlg").close();
       }
+      if (mode === "inspiration" && m === "inspiration") {
+        const id = lankDelar()[2];
+        const rum = !sub || sub === "alla" ? "" : sub === "osorterat" ? OSORT : allaRum().find(r => slug(r) === slug(sub)) ?? iRum;
+        if (rum !== iRum) { iRum = rum; store.set("inspRum", rum); renderInsp(); }
+        if (id) { if (id !== iOpen) { iOpen = id; renderInspDlg(); } }
+        else if ($("inspDlg").open) $("inspDlg").close();
+      }
     } finally { routing = false; }
   }
   let mode = vyFranLank() || (Object.keys(VYLANK).includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan");
@@ -2055,8 +2252,9 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     mode = m; store.set("view", m); $("mode").value = m;
     // Planlösning, Bilder och Dokument är öppna för alla; övriga flikar kräver inloggning med behörighet.
     const lock = !["plan", "bilder", "dokument"].includes(m) && !mobRead;
-    const mb = m === "moblering" && !lock, p = m === "plan" || mb, k = m === "kalkyl" && !lock, b = m === "bilder", d = m === "dokument", t = m === "todo" && !lock;
+    const mb = m === "moblering" && !lock, p = m === "plan" || mb, k = m === "kalkyl" && !lock, b = m === "bilder", d = m === "dokument", t = m === "todo" && !lock, ins = m === "inspiration" && !lock;
     $("board").hidden = !t; $("todoSide").hidden = !t; if (t) renderBoard();
+    $("insp").hidden = !ins; $("inspSide").hidden = !ins; if (ins) renderInsp(); else if ($("inspDlg").open) $("inspDlg").close();
     $("locked").hidden = !lock;
     if (lock) $("lockedText").textContent = window.v23konto && window.v23konto.user ? "Du har inte behörighet till den här fliken." : "Logga in (i sidomenyn) för att se den här fliken.";
     $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p; $("mobSide").hidden = !mb;
@@ -2376,6 +2574,7 @@ onAuthStateChanged(auth, async user => {
   followMob(user, roll);
   followKalkyl(roll);
   followLappar(user, roll);
+  followInsp(roll);
 });
 
 // ---------- Planen i databasen: dokumentet planer/plan = { text, av, uppdaterad } ----------
@@ -2468,6 +2667,28 @@ window.v23todoDb = {
   add: data => addDoc(lappCol, { ...data, skapadAv: auth.currentUser.email, skapad: serverTimestamp() }),
   update: (id, patch) => setDoc(doc(lappCol, id), { ...patch, andradAv: auth.currentUser.email, andrad: serverTimestamp() }, { merge: true }),
   remove: id => deleteDoc(doc(lappCol, id)),
+};
+
+// ---------- Inspiration: samlingen inspiration (liten bild och uppgifter) och inspirationBild/<samma id> (stor bild) ----------
+const inspCol = collection(db, "inspiration"), inspBildCol = collection(db, "inspirationBild");
+let unsubInsp = null;
+function followInsp(roll) {
+  if (unsubInsp) { unsubInsp(); unsubInsp = null; }
+  window.v23insp.set([]);
+  if (!roll || roll === "ingen") return;
+  unsubInsp = onSnapshot(inspCol, snap => window.v23insp.set(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(err));
+}
+window.v23inspDb = {
+  async add(data, bild) {
+    const ref = doc(inspCol), b = writeBatch(db);
+    b.set(ref, { ...data, skapadAv: auth.currentUser.email, skapad: serverTimestamp() });
+    b.set(doc(inspBildCol, ref.id), { bild });
+    await b.commit();
+    return ref.id;
+  },
+  update: (id, patch) => setDoc(doc(inspCol, id), { ...patch, andradAv: auth.currentUser.email, andrad: serverTimestamp() }, { merge: true }),
+  async remove(id) { const b = writeBatch(db); b.delete(doc(inspCol, id)); b.delete(doc(inspBildCol, id)); await b.commit(); },
+  bild: async id => (await getDoc(doc(inspBildCol, id))).data()?.bild || null,
 };
 
 window.v23kalkylDb = { save: data => setDoc(kalkylRef, { ...data, av: auth.currentUser.email, uppdaterad: serverTimestamp() }) };
