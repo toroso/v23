@@ -304,6 +304,53 @@ a.btn[hidden] { display: none; }
 .mhit.on { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
 .locked { display: grid; place-items: center; padding: 40px; color: var(--muted); }
 .locked[hidden] { display: none; }
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: 14px; padding: 18px; overflow: auto; background: var(--paper); align-items: start; }
+.board[hidden] { display: none; }
+.kol { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 8px; max-height: 100%; }
+.kol header { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 4px; color: var(--muted); font-size: .85rem; }
+.kol h3 { margin: 0; font-size: .95rem; color: var(--ink); }
+.klist { display: flex; flex-direction: column; gap: 8px; min-height: 40px; overflow-y: auto; }
+.lapp { position: relative; background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.lapp:hover { border-color: var(--muted); }
+.lapp.drar { opacity: .4; }
+.lapp.ghost { position: fixed; z-index: 50; pointer-events: none; box-shadow: 0 6px 18px rgba(0,0,0,.18); transform: rotate(2deg); }
+.lapp { user-select: none; -webkit-user-select: none; }
+.lrub { display: flex; gap: 6px; align-items: baseline; padding-right: 12px; }
+.lrub b { font-weight: 500; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.lemoji { font-size: 1.1rem; }
+.lagare { font-size: .72rem; color: var(--muted); border: 1px solid var(--rule); border-radius: 10px; padding: 0 6px; white-space: nowrap; }
+.lmeta, .ltags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.lhar { position: absolute; right: 8px; top: 6px; color: var(--muted); font-size: .8rem; }
+.tpill { font-size: .72rem; border: 1px solid var(--rule); border-radius: 4px; padding: 0 5px; color: var(--muted); }
+.tpill.niva-hog { border-color: var(--danger); color: var(--danger); }
+.tpill.sen { background: var(--danger); border-color: var(--danger); color: #fff; }
+.tpill.snart { background: #f2d27a; border-color: #d9b44a; color: #4a3a08; }
+.tchip { font-size: .72rem; border-radius: 10px; padding: 1px 7px; background: hsl(var(--h) 60% 88%); color: hsl(var(--h) 55% 25%); display: inline-flex; align-items: center; gap: 3px; }
+.tchip.rum { border-radius: 4px; }
+.tchip button { border: 0; background: none; padding: 0 2px; font-size: .8rem; color: inherit; cursor: pointer; }
+.dropmark { height: 4px; border-radius: 2px; background: var(--accent); }
+.nylapp input { width: 100%; font: inherit; font-size: .88rem; padding: 6px 8px; border: 1px dashed var(--rule); border-radius: 6px; background: transparent; color: var(--ink); }
+.tfilter { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 6px 0; font-size: .88rem; }
+.tfilter select { font: inherit; font-size: .85rem; max-width: 60%; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 3px 6px; }
+.lappdlg { width: min(640px, 94vw); max-height: 90vh; border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; background: var(--panel); color: var(--ink); }
+.lappdlg::backdrop { background: rgba(0,0,0,.35); }
+.dlghead { display: flex; gap: 8px; align-items: center; }
+.dlghead input, .dlghead select, .dgrid select, .dgrid input, .dchips select, .dchips input, .ddesc textarea { font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 5px 8px; }
+.demoji { width: 64px; font-size: 1.2rem; padding: 3px 4px !important; }
+.drub { flex: 1; font-size: 1.05rem !important; font-weight: 500; }
+.dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 12px 0; }
+.dgrid label { display: grid; gap: 3px; font-size: .8rem; color: var(--muted); }
+.drow { display: flex; gap: 10px; align-items: baseline; margin: 8px 0; }
+.dlbl { font-size: .8rem; color: var(--muted); min-width: 70px; display: flex; gap: 8px; align-items: center; }
+.dlbl button { padding: 1px 8px; font-size: .78rem; }
+.dchips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.dchips select, .dchips input { padding: 2px 6px; font-size: .82rem; }
+.ddesc { margin-top: 12px; }
+.ddesc textarea { width: 100%; margin-top: 6px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+.md { margin-top: 4px; font-size: .92rem; line-height: 1.5; overflow-wrap: anywhere; }
+.md :first-child { margin-top: 0; }
+.dfoot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 16px; color: var(--muted); }
+@media (max-width: 760px) { .board { grid-auto-columns: 85vw; scroll-snap-type: x mandatory; } .kol { scroll-snap-align: start; } }
 .konto { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 14px 0; font-size: 13px; color: var(--muted); }
 .kontoSub { margin: -8px 0 14px; font-size: 12px; color: var(--muted); }
 .konto span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -312,7 +359,7 @@ a.btn[hidden] { display: none; }
 <body>
 <div class="app">
   <aside class="side">
-    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="moblering">Möblering</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option><option value="dokument">Dokument</option></select></h1>
+    <h1 class="viewpick"><select id="mode" aria-label="Vy"><option value="plan">Planlösning</option><option value="moblering">Möblering</option><option value="todo">Att göra</option><option value="kalkyl">Kalkyl</option><option value="bilder">Bilder</option><option value="dokument">Dokument</option></select></h1>
     <div id="planSide">
       <h2>Lager</h2>
       <ul class="tree" id="layers"></ul>
@@ -340,6 +387,7 @@ a.btn[hidden] { display: none; }
     </div>
     <div id="dokSide" hidden></div>
     <div id="mobSide" hidden></div>
+    <div id="todoSide" hidden></div>
     <div class="konto" id="konto"><span id="kontoText">Inte inloggad</span><button id="kontoBtn" type="button">Logga in</button></div>
     <div class="kontoSub" id="planKalla"></div>
     <label class="themepick">Utseende
@@ -392,6 +440,7 @@ a.btn[hidden] { display: none; }
       <div class="vthumbs" id="vThumbs"></div>
     </section>
   </main>
+  <main class="board" id="board" hidden aria-label="Att göra"></main>
   <main class="locked" id="locked" hidden><p id="lockedText"></p></main>
   <main class="docs" id="docs" hidden>
     <div class="dbar"><div><b id="dTitle"></b><small id="dSub"></small></div><span class="sp"></span><a class="btn" id="dOpen" target="_blank" rel="noopener">Öppna i ny flik</a><a class="btn" id="dDown" download>Ladda ner</a></div>
@@ -399,6 +448,7 @@ a.btn[hidden] { display: none; }
   </main>
 </div>
 <div id="print" aria-hidden="true"></div>
+<dialog id="lappDlg" class="lappdlg" aria-label="Lapp"></dialog>
 
 <script type="text/plain" id="plandata"># Planlösning. Mått i cm, innermått.
 # Rum beskrivs medurs från övre vänstra hörnet, första väggen åt höger (öster).
@@ -718,6 +768,8 @@ lager TaBortGU på Ovanvåning
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script>
 // ---------- Planmotor: tolkning, lager, geometri ----------
 const STD = 10, TOL = 0.5, FACE = 40;
@@ -1761,12 +1813,215 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     all: () => mobs,
   };
 
-  let mode = ["kalkyl", "bilder", "dokument", "moblering"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
+  // ---------- att göra: en tavla med lappar, delad i databasen (samlingen lappar) ----------
+  // lapp = { rubrik, emoji, kolumn, ordning, vikt, bradska, deadline, agare, rum: [], etiketter: [], beskrivning,
+  //          skapad, skapadAv, andrad, andradAv }. Allt utom rubrik är frivilligt.
+  const KOLUMNER = [["att-gora", "Att göra"], ["pagar", "Pågår"], ["vantar", "Väntar"], ["klart", "Klart"]];
+  const NIVA = [["hog", "Hög"], ["medel", "Medel"], ["lag", "Låg"]];
+  const EMOJIS = ["🔨", "🪚", "🎨", "🚿", "🚽", "🛁", "⚡", "💡", "🧱", "🪟", "🚪", "🛏️", "🍳", "📞", "📝", "💰", "📦", "🧹", "✅", "❗"];
+  let lappar = [], personer = [], lappOpen = null, descEdit = false, dragId = null;
+  let tf = Object.assign({ rum: "", agare: "", etikett: "" }, store.get("todoFilter", {}));
+  const namnAv = e => e ? e.split("@")[0] : "";
+  const nivaNamn = v => (NIVA.find(n => n[0] === v) || [, ""])[1];
+  const hue = s => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+  const chip = (t, cls = "") => `<span class="tchip ${cls}" style="--h:${hue(t)}">${esc(t)}</span>`;
+  const today = () => new Date().toISOString().slice(0, 10);
+  const daysTo = d => Math.round((new Date(d + "T12:00") - new Date(today() + "T12:00")) / 864e5);
+  const allaRum = () => [...new Set([...mobRooms().values()].flatMap(s => [...s]))].sort((a, b) => a.localeCompare(b, "sv"));
+  const allaEtiketter = () => [...new Set(lappar.flatMap(l => l.etiketter || []))].sort((a, b) => a.localeCompare(b, "sv"));
+  const syns = l => (!tf.rum || (l.rum || []).includes(tf.rum)) && (!tf.agare || l.agare === tf.agare) && (!tf.etikett || (l.etiketter || []).includes(tf.etikett));
+  const iKolumn = k => lappar.filter(l => (l.kolumn || "att-gora") === k).sort((a, b) => (a.ordning ?? 0) - (b.ordning ?? 0));
+
+  function lappHtml(l) {
+    const meta = [];
+    if (l.vikt) meta.push(`<span class="tpill niva-${l.vikt}" title="Vikt">Vikt ${nivaNamn(l.vikt).toLowerCase()}</span>`);
+    if (l.bradska) meta.push(`<span class="tpill niva-${l.bradska}" title="Brådska">Brådska ${nivaNamn(l.bradska).toLowerCase()}</span>`);
+    if (l.deadline) {
+      const n = daysTo(l.deadline), late = l.kolumn !== "klart" && n < 0, soon = l.kolumn !== "klart" && n >= 0 && n <= 7;
+      meta.push(`<span class="tpill${late ? " sen" : soon ? " snart" : ""}" title="Deadline">📅 ${esc(new Date(l.deadline + "T12:00").toLocaleDateString("sv-SE", { day: "numeric", month: "short" }))}</span>`);
+    }
+    const tags = [...(l.rum || []).map(r => chip(r, "rum")), ...(l.etiketter || []).map(e => chip(e))].join("");
+    return `<article class="lapp" data-lapp="${esc(l.id)}" tabindex="0">
+      <div class="lrub">${l.emoji ? `<span class="lemoji">${esc(l.emoji)}</span>` : ""}<b>${esc(l.rubrik)}</b>${l.agare ? `<span class="lagare" title="${esc(l.agare)}">${esc(namnAv(l.agare))}</span>` : ""}</div>
+      ${meta.length ? `<div class="lmeta">${meta.join("")}</div>` : ""}${tags ? `<div class="ltags">${tags}</div>` : ""}
+      ${l.beskrivning ? `<span class="lhar" title="Har beskrivning">≡</span>` : ""}</article>`;
+  }
+  function renderBoard() {
+    if (mode !== "todo") return;
+    $("board").innerHTML = KOLUMNER.map(([k, namn]) => {
+      const list = iKolumn(k), vis = list.filter(syns);
+      return `<section class="kol" data-kol="${k}"><header><h3>${namn}</h3><span>${vis.length}${vis.length !== list.length ? ` av ${list.length}` : ""}</span></header>
+        <div class="klist" data-kol="${k}">${vis.map(lappHtml).join("")}</div>
+        ${mobWrite ? `<form class="nylapp" data-kol="${k}"><input placeholder="+ Ny lapp" aria-label="Ny lapp i ${namn}"></form>` : ""}</section>`;
+    }).join("");
+    renderTodoSide();
+  }
+  function renderTodoSide() {
+    const opt = (v, t, cur) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(t)}</option>`;
+    const sel = (k, namn, vals) => `<label class="tfilter">${namn}<select data-tf="${k}">${opt("", "Alla", tf[k])}${vals.map(([v, t]) => opt(v, t, tf[k])).join("")}</select></label>`;
+    $("todoSide").innerHTML = `<h2>Filter</h2>
+      ${sel("rum", "Rum", allaRum().map(r => [r, r]))}
+      ${sel("agare", "Ägare", personer.map(p => [p, namnAv(p)]))}
+      ${sel("etikett", "Etikett", allaEtiketter().map(e => [e, e]))}
+      ${tf.rum || tf.agare || tf.etikett ? `<button type="button" id="tfClear">Visa alla</button>` : ""}
+      ${mobWrite ? "" : `<p class="mhint">Du kan läsa men inte ändra.</p>`}`;
+  }
+
+  // ---------- lappens dialog ----------
+  function renderDlg() {
+    const l = lappar.find(x => x.id === lappOpen), dlg = $("lappDlg");
+    if (!l) { if (dlg.open) dlg.close(); return; }
+    const ro = mobWrite ? "" : " disabled";
+    const opt = (v, t, cur) => `<option value="${esc(v)}"${v === (cur || "") ? " selected" : ""}>${esc(t)}</option>`;
+    const nivaSel = (k, namn) => `<label>${namn}<select data-f="${k}"${ro}>${opt("", "–", l[k])}${NIVA.map(([v, t]) => opt(v, t, l[k])).join("")}</select></label>`;
+    const rumLista = allaRum().filter(r => !(l.rum || []).includes(r));
+    const md = l.beskrivning ? DOMPurify.sanitize(marked.parse(l.beskrivning)) : `<p class="mhint">Ingen beskrivning.</p>`;
+    const vem = (e, ts) => e ? `${esc(namnAv(e))}${ts ? ", " + esc(ts.toDate().toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" })) : ""}` : "";
+    dlg.innerHTML = `<form method="dialog" class="dlghead">
+        <select class="demoji" data-f="emoji" aria-label="Emoji"${ro}>${opt("", "–", l.emoji)}${[...new Set([...EMOJIS, ...(l.emoji ? [l.emoji] : [])])].map(e => opt(e, e, l.emoji)).join("")}</select>
+        <input class="drub" data-f="rubrik" value="${esc(l.rubrik)}" aria-label="Rubrik" required${ro}>
+        <button value="stang" aria-label="Stäng">✕</button></form>
+      <div class="dgrid">
+        <label>Kolumn<select data-f="kolumn"${ro}>${KOLUMNER.map(([v, t]) => opt(v, t, l.kolumn || "att-gora")).join("")}</select></label>
+        ${nivaSel("vikt", "Vikt")}${nivaSel("bradska", "Brådska")}
+        <label>Deadline<input type="date" data-f="deadline" value="${esc(l.deadline || "")}"${ro}></label>
+        <label>Ägare<select data-f="agare"${ro}>${opt("", "–", l.agare)}${personer.map(p => opt(p, namnAv(p), l.agare)).join("")}</select></label>
+      </div>
+      <div class="drow"><span class="dlbl">Rum</span><div class="dchips">${(l.rum || []).map(r => `<span class="tchip rum" style="--h:${hue(r)}">${esc(r)}${mobWrite ? `<button type="button" data-delrum="${esc(r)}" aria-label="Ta bort ${esc(r)}">×</button>` : ""}</span>`).join("")}
+        ${mobWrite ? `<select data-addrum><option value="">+ Rum</option>${rumLista.map(r => `<option>${esc(r)}</option>`).join("")}</select>` : ""}</div></div>
+      <div class="drow"><span class="dlbl">Etiketter</span><div class="dchips">${(l.etiketter || []).map(e => `<span class="tchip" style="--h:${hue(e)}">${esc(e)}${mobWrite ? `<button type="button" data-deltag="${esc(e)}" aria-label="Ta bort ${esc(e)}">×</button>` : ""}</span>`).join("")}
+        ${mobWrite ? `<input data-addtag list="tagList" placeholder="+ Etikett, Enter"><datalist id="tagList">${allaEtiketter().map(e => `<option value="${esc(e)}">`).join("")}</datalist>` : ""}</div></div>
+      <div class="ddesc"><div class="dlbl">Beskrivning ${mobWrite && !descEdit ? `<button type="button" data-act="desc">Redigera</button>` : ""}</div>
+        ${descEdit ? `<textarea id="descText" rows="10" placeholder="Markdown: **fet**, *kursiv*, - punkter, [länk](https://…)">${esc(l.beskrivning || "")}</textarea>
+          <div class="mrow"><button type="button" class="primary" data-act="descSpara">Spara</button><button type="button" data-act="descAvbryt">Avbryt</button></div>`
+        : `<div class="md">${md}</div>`}</div>
+      <div class="dfoot"><small>Skapad av ${vem(l.skapadAv, l.skapad)}${l.andradAv ? ` · ändrad av ${vem(l.andradAv, l.andrad)}` : ""}</small>
+        ${mobWrite ? `<button type="button" data-act="radera">Ta bort lapp</button>` : ""}</div>`;
+    if (!dlg.open) dlg.showModal();
+  }
+  const upd = (patch) => window.v23todoDb.update(lappOpen, patch).catch(err => { console.error(err); toast("Kunde inte spara."); });
+  const openLapp = id => { lappOpen = id; descEdit = false; renderDlg(); };
+
+  $("lappDlg").addEventListener("close", () => { lappOpen = null; descEdit = false; });
+  $("lappDlg").addEventListener("change", e => {
+    const t = e.target, l = lappar.find(x => x.id === lappOpen); if (!l || !mobWrite) return;
+    if (t.dataset.f) {
+      const k = t.dataset.f, v = t.value.trim();
+      if (k === "rubrik" && !v) { t.value = l.rubrik; return; }
+      const patch = { [k]: v || null };
+      if (k === "kolumn") patch.ordning = Math.max(0, ...iKolumn(v).map(x => x.ordning ?? 0)) + 1000;
+      upd(patch);
+    } else if (t.hasAttribute("data-addrum") && t.value) upd({ rum: [...(l.rum || []), t.value] });
+  });
+  $("lappDlg").addEventListener("keydown", e => {
+    const t = e.target, l = lappar.find(x => x.id === lappOpen);
+    if (e.key === "Enter" && t.hasAttribute && t.hasAttribute("data-addtag")) {
+      e.preventDefault(); const v = t.value.trim(); if (!v || !l) return;
+      if (!(l.etiketter || []).includes(v)) upd({ etiketter: [...(l.etiketter || []), v] });
+      t.value = "";
+    }
+    if (e.key === "Enter" && t.dataset && t.dataset.f && t.tagName === "INPUT") { e.preventDefault(); t.blur(); }
+  });
+  $("lappDlg").addEventListener("click", async e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const l = lappar.find(x => x.id === lappOpen); if (!l) return;
+    if (b.dataset.delrum) return upd({ rum: (l.rum || []).filter(r => r !== b.dataset.delrum) });
+    if (b.dataset.deltag) return upd({ etiketter: (l.etiketter || []).filter(x => x !== b.dataset.deltag) });
+    const a = b.dataset.act;
+    if (a === "desc") { descEdit = true; renderDlg(); document.getElementById("descText")?.focus(); }
+    else if (a === "descAvbryt") { descEdit = false; renderDlg(); }
+    else if (a === "descSpara") { const v = document.getElementById("descText").value; descEdit = false; await upd({ beskrivning: v }); renderDlg(); }
+    else if (a === "radera") {
+      if (!confirm(`Ta bort lappen ”${l.rubrik}”? Det går inte att ångra.`)) return;
+      const id = lappOpen; $("lappDlg").close();
+      window.v23todoDb.remove(id).catch(err => { console.error(err); toast("Kunde inte ta bort."); });
+    }
+  });
+
+  // ---------- tavlan: nya lappar, klick och dra-och-släpp ----------
+  $("board").addEventListener("submit", e => {
+    e.preventDefault();
+    const f = e.target.closest(".nylapp"), inp = f && f.querySelector("input"), v = inp && inp.value.trim(); if (!v) return;
+    const k = f.dataset.kol;
+    window.v23todoDb.add({ rubrik: v, kolumn: k, ordning: Math.max(0, ...iKolumn(k).map(x => x.ordning ?? 0)) + 1000, rum: tf.rum ? [tf.rum] : [], etiketter: tf.etikett ? [tf.etikett] : [], agare: tf.agare || null })
+      .catch(err => { console.error(err); toast("Kunde inte spara."); });
+    inp.value = "";
+  });
+  $("board").addEventListener("click", e => { const c = e.target.closest(".lapp"); if (c && !justDragged) openLapp(c.dataset.lapp); });
+  $("board").addEventListener("keydown", e => { const c = e.target.closest(".lapp"); if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openLapp(c.dataset.lapp); } });
+  // dra med mus direkt, med finger efter ett kort tryck (annars skrollar tavlan)
+  let pd = null, justDragged = false;
+  const dropIndex = (list, y) => {
+    const cards = [...list.querySelectorAll(".lapp:not(.drar)")];
+    const i = cards.findIndex(c => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
+    return [cards, i < 0 ? cards.length : i];
+  };
+  const clearMarks = () => document.querySelectorAll(".dropmark").forEach(x => x.remove());
+  function startDrag() {
+    const r = pd.card.getBoundingClientRect();
+    pd.drag = true; pd.dx = pd.x - r.left; pd.dy = pd.y - r.top;
+    pd.ghost = pd.card.cloneNode(true); pd.ghost.classList.add("ghost"); pd.ghost.style.width = r.width + "px";
+    document.body.appendChild(pd.ghost); pd.card.classList.add("drar"); moveDrag(pd.x, pd.y);
+  }
+  function moveDrag(x, y) {
+    pd.ghost.style.left = x - pd.dx + "px"; pd.ghost.style.top = y - pd.dy + "px";
+    clearMarks(); pd.list = document.elementFromPoint(x, y)?.closest(".kol")?.querySelector(".klist") || null;   // hela kolumnen tar emot
+    if (!pd.list) return;
+    const [cards, i] = dropIndex(pd.list, y), mark = document.createElement("div"); mark.className = "dropmark";
+    if (i < cards.length) pd.list.insertBefore(mark, cards[i]); else pd.list.appendChild(mark);
+  }
+  function endDrag(drop, y) {
+    if (pd.timer) clearTimeout(pd.timer);
+    if (pd.drag) {
+      pd.ghost.remove(); pd.card.classList.remove("drar"); clearMarks();
+      justDragged = true; setTimeout(() => { justDragged = false; }, 50);
+      if (drop && pd.list) {
+        const id = pd.card.dataset.lapp, k = pd.list.dataset.kol, [cards, i] = dropIndex(pd.list, y);
+        const ord = x => lappar.find(l => l.id === x)?.ordning ?? 0;
+        const prev = i > 0 ? ord(cards[i - 1].dataset.lapp) : null, next = i < cards.length ? ord(cards[i].dataset.lapp) : null;
+        const ordning = prev === null && next === null ? 1000 : prev === null ? next - 1000 : next === null ? prev + 1000 : (prev + next) / 2;
+        const l = lappar.find(x => x.id === id); if (l) { l.kolumn = k; l.ordning = ordning; }   // direkt på skärmen
+        renderBoard();
+        window.v23todoDb.update(id, { kolumn: k, ordning }).catch(err => { console.error(err); toast("Kunde inte spara."); });
+      }
+    }
+    pd = null;
+  }
+  $("board").addEventListener("pointerdown", e => {
+    const c = e.target.closest(".lapp"); if (!c || !mobWrite || e.button > 0) return;
+    pd = { pid: e.pointerId, card: c, x: e.clientX, y: e.clientY, drag: false, touch: e.pointerType !== "mouse" };
+    if (pd.touch) pd.timer = setTimeout(() => { if (pd && !pd.drag) startDrag(); }, 350);
+  });
+  document.addEventListener("pointermove", e => {
+    if (!pd || e.pointerId !== pd.pid) return;
+    if (!pd.drag) {
+      if (Math.hypot(e.clientX - pd.x, e.clientY - pd.y) < 6) return;
+      if (pd.touch) return endDrag(false);                       // fingret skrollar innan det hållits still
+      startDrag();
+    }
+    moveDrag(e.clientX, e.clientY);
+  });
+  document.addEventListener("pointerup", e => { if (pd && e.pointerId === pd.pid) endDrag(true, e.clientY); });
+  document.addEventListener("pointercancel", e => { if (pd && e.pointerId === pd.pid) endDrag(false); });
+  $("board").addEventListener("touchmove", e => { if (pd && pd.drag) e.preventDefault(); }, { passive: false });
+  $("todoSide").addEventListener("change", e => { const k = e.target.dataset.tf; if (!k) return; tf[k] = e.target.value; store.set("todoFilter", tf); renderBoard(); });
+  $("todoSide").addEventListener("click", e => { if (e.target.id === "tfClear") { tf = { rum: "", agare: "", etikett: "" }; store.set("todoFilter", tf); renderBoard(); } });
+
+  window.v23todo = {                                   // används av kontodelen
+    set(list) {
+      lappar = list; renderBoard();
+      if (lappOpen) { const a = document.activeElement; if (!descEdit && !(a && $("lappDlg").contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) renderDlg(); }
+    },
+    people(list) { personer = list; renderBoard(); },
+  };
+
+  let mode = ["kalkyl", "bilder", "dokument", "moblering", "todo"].includes(store.get("view", "plan")) ? store.get("view", "plan") : "plan";
   function setMode(m) {
     mode = m; store.set("view", m); $("mode").value = m;
     // Planlösning, Bilder och Dokument är öppna för alla; övriga flikar kräver inloggning med behörighet.
     const lock = !["plan", "bilder", "dokument"].includes(m) && !mobRead;
-    const mb = m === "moblering" && !lock, p = m === "plan" || mb, k = m === "kalkyl" && !lock, b = m === "bilder", d = m === "dokument";
+    const mb = m === "moblering" && !lock, p = m === "plan" || mb, k = m === "kalkyl" && !lock, b = m === "bilder", d = m === "dokument", t = m === "todo" && !lock;
+    $("board").hidden = !t; $("todoSide").hidden = !t; if (t) renderBoard();
     $("locked").hidden = !lock;
     if (lock) $("lockedText").textContent = window.v23konto && window.v23konto.user ? "Du har inte behörighet till den här fliken." : "Logga in (i sidomenyn) för att se den här fliken.";
     $("stage").hidden = !p; $("planSide").hidden = !p; $("planNotes").hidden = !p; $("mobSide").hidden = !mb;
@@ -2083,6 +2338,7 @@ onAuthStateChanged(auth, async user => {
   followPlan(user, roll);
   followMob(user, roll);
   followKalkyl(roll);
+  followLappar(user, roll);
 });
 
 // ---------- Planen i databasen: dokumentet planer/plan = { text, av, uppdaterad } ----------
@@ -2158,6 +2414,25 @@ function followKalkyl(roll) {
   if (!roll || roll === "ingen") return;
   unsubKalkyl = onSnapshot(kalkylRef, snap => { if (snap.exists()) window.v23kalkyl.set(snap.data()); }, err => console.error(err));
 }
+// ---------- Att göra i databasen: samlingen lappar; ägare väljs bland dem som får skriva ----------
+const lappCol = collection(db, "lappar");
+let unsubLappar = null;
+async function followLappar(user, roll) {
+  if (unsubLappar) { unsubLappar(); unsubLappar = null; }
+  window.v23todo.set([]);
+  if (!roll || roll === "ingen") { window.v23todo.people([]); return; }
+  unsubLappar = onSnapshot(lappCol, snap => window.v23todo.set(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(err));
+  try {
+    const r = (await getDoc(doc(db, "config", "roller"))).data() || {};
+    window.v23todo.people([...new Set([AGARE, ...(r.skriv || [])])]);
+  } catch (err) { console.error(err); window.v23todo.people([AGARE]); }
+}
+window.v23todoDb = {
+  add: data => addDoc(lappCol, { ...data, skapadAv: auth.currentUser.email, skapad: serverTimestamp() }),
+  update: (id, patch) => setDoc(doc(lappCol, id), { ...patch, andradAv: auth.currentUser.email, andrad: serverTimestamp() }, { merge: true }),
+  remove: id => deleteDoc(doc(lappCol, id)),
+};
+
 window.v23kalkylDb = { save: data => setDoc(kalkylRef, { ...data, av: auth.currentUser.email, uppdaterad: serverTimestamp() }) };
 
 window.v23mobDb = {
