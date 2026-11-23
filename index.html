@@ -2420,6 +2420,8 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     { grupp: "Föreningen", id: "underhall", namn: "Underhållsplan", sub: "Genomfört, planerat och förslag", fil: "dokument/underhallsplan.xlsx", html: underhallHtml },
     { grupp: "Föreningen", id: "stadgar", namn: "Stadgar", sub: "Antagna 15 januari 2018", fil: "dokument/stadgar.pdf" },
     { grupp: "Föreningen", id: "energi", namn: "Energideklaration", sub: "Giltig till 28 oktober 2032", fil: "dokument/energideklaration.pdf" },
+    { grupp: "Renovering", id: "entreprenadhuset-grov", namn: "Entreprenadhuset, grov uppskattning", sub: "Grundomfattning 1,65–2,2 Mkr, november 2026", fil: "dokument/Entreprenadhuset-grov-uppskattning.pdf" },
+    { grupp: "Renovering", id: "entreprenadhuset-rumsvis", namn: "Entreprenadhuset, prisuppskattning per rum", sub: "Grundomfattning 1,17–1,59 Mkr, el och VVS per rum", fil: "dokument/Entreprenadhuset-prisuppskattning-per-rum.pdf", original: "dokument/Entreprenadhuset-prisuppskattning-per-rum.docx" },
   ];
   let dokId = DOKUMENT.some(d => d.id === store.get("dok")) ? store.get("dok") : DOKUMENT[0].id;
   function renderDocs() {
@@ -2429,7 +2431,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     $("dTitle").textContent = doc.namn; $("dSub").textContent = doc.sub;
     const link = doc.fil || doc.bilder[0][0];
     $("dOpen").hidden = !!doc.html || !!doc.bilder; $("dOpen").href = link;
-    $("dDown").hidden = !doc.fil; $("dDown").href = link; $("dDown").textContent = doc.html ? "Ladda ner kalkylark" : "Ladda ner";
+    $("dDown").hidden = !doc.fil; $("dDown").href = doc.original || link; $("dDown").textContent = doc.html ? "Ladda ner kalkylark" : doc.original ? "Ladda ner Word-fil" : "Ladda ner";
     const body = $("dBody"); body.className = "dbody" + (doc.html ? " text" : "");
     body.innerHTML = doc.html ? `<article class="calc">${doc.html()}</article>`
       : doc.bilder ? `<div class="dimgs">${doc.bilder.map(([src, cap]) => `<figure><img src="${src}" alt="${esc(cap)}"><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`
