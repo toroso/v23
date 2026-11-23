@@ -347,6 +347,18 @@ a.btn[hidden] { display: none; }
 .itum { font-size: .8rem; border: 1px solid var(--rule); border-radius: 12px; padding: 1px 8px; background: transparent; color: var(--ink); }
 .itum.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .bitem.on { color: var(--accent); font-weight: 600; }
+.iplan { padding: 2px 16px 4px; }
+.iplan .seg { margin-bottom: 4px; }
+#iplanSvg { width: 100%; height: clamp(260px, 46vh, 540px); display: block; }
+#iplanSvg .walls { fill: var(--wall); }
+#iplanSvg .groom { cursor: pointer; }
+#iplanSvg .groom polygon { fill: var(--paper); }
+#iplanSvg .groom:hover polygon, #iplanSvg .groom:focus-visible polygon { fill: color-mix(in srgb, var(--accent) 14%, var(--paper)); }
+#iplanSvg .groom.on polygon { fill: color-mix(in srgb, var(--accent) 28%, var(--paper)); }
+#iplanSvg .groom:focus { outline: none; }
+#iplanSvg .groom text { text-anchor: middle; fill: var(--muted); font-family: "Archivo", sans-serif; }
+#iplanSvg .groom.has text, #iplanSvg .groom.on text { fill: var(--ink); font-weight: 600; }
+#iplanSvg .groom text.gcount { fill: var(--accent); font-weight: 400; }
 .inspdlg { width: min(980px, 96vw) !important; }
 .istage { display: flex; justify-content: center; background: #15171b; border-radius: 8px; margin: 10px 0; }
 .istage img { max-width: 100%; max-height: 62vh; object-fit: contain; display: block; }
@@ -2041,6 +2053,29 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   // bild = { tumme (liten data-URL), rum: [], kommentar, kalla, tummar: { e-post: 1 | -1 | 0 }, skapadAv, skapad }
   // Den stora bilden ligger i inspirationBild/<id> och hämtas först när bilden öppnas.
   let insp = [], iRum = store.get("inspRum", ""), iSort = store.get("inspSort", "ny"), iOpen = null;
+  let iFloor = store.get("inspFloor", ""), iPlanVis = store.get("inspPlan", "1") !== "0";
+
+  function inspPlan() {                                        // originalplanen som i Bilder; klick på ett rum väljer det
+    const floors = plan.layers.filter(l => !l.parents.length).map(l => l.name);
+    const Fs = new Map(floors.map(fl => [fl, computeFloor(plan, fl, new Set([fl]), window.polygonClipping)]));
+    const hit = floors.find(fl => Fs.get(fl).rooms.some(r => r.name === iRum));
+    if (hit) iFloor = hit; else if (!floors.includes(iFloor)) iFloor = floors[0];
+    if (!iFloor) return "";
+    const F = Fs.get(iFloor), n = r => insp.filter(b => (b.rum || []).includes(r)).length;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const r of F.rooms) for (const p of r.g) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, -p[1]); y1 = Math.max(y1, -p[1]); }
+    const m = 40, fs = Math.max(x1 - x0, y1 - y0) / 42;
+    const rooms = F.rooms.map(r => {
+      const c = labelPoint(r.g), k = n(r.name);
+      return `<g class="groom${k ? " has" : ""}${r.name === iRum ? " on" : ""}" data-iplanrum="${esc(r.name)}" tabindex="0" role="button" aria-label="${esc(r.name)}, ${k} bilder">` +
+        `<polygon points="${r.g.map(S).join(" ")}"/>` +
+        `<text x="${c[0].toFixed(1)}" y="${(-c[1]).toFixed(1)}" font-size="${fs.toFixed(1)}">${esc(r.name)}</text>` +
+        (k ? `<text class="gcount" x="${c[0].toFixed(1)}" y="${(-c[1] + fs * 1.15).toFixed(1)}" font-size="${(fs * .75).toFixed(1)}">${k} ${k === 1 ? "bild" : "bilder"}</text>` : "") + `</g>`;
+    }).join("");
+    return `<div class="iplan"><div class="seg" role="group" aria-label="Våning">${floors.map(fl => `<button type="button" data-ifloor="${esc(fl)}" class="${fl === iFloor ? "on" : ""}" aria-pressed="${fl === iFloor}">${esc(fl)}</button>`).join("")}</div>
+      <svg id="iplanSvg" xmlns="http://www.w3.org/2000/svg" viewBox="${x0 - m} ${y0 - m} ${x1 - x0 + 2 * m} ${y1 - y0 + 2 * m}" aria-label="Originalplan, klicka på ett rum">
+      <path class="walls" fill-rule="evenodd" d="${F.walls.map(poly => poly.map(ring => "M" + ring.map(S).join("L") + "Z").join("")).join("")}"/>${rooms}</svg></div>`;
+  }
   const OSORT = "_";                                           // osorterat; "" = alla bilder
   const bildCache = new Map();
   const minEpost = () => window.v23konto?.user?.email || "";
@@ -2066,7 +2101,9 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     const list = iLista(), me = minEpost();
     const dit = iRum && iRum !== OSORT ? iRum : "Osorterat";
     $("insp").innerHTML = `<div class="ibar"><b>${esc(rumNamn(iRum))}</b><span class="count">${list.length} ${list.length === 1 ? "bild" : "bilder"}</span><span class="sp"></span>
-        <div class="seg" role="group" aria-label="Ordning"><button type="button" data-isort="ny" class="${iSort === "ny" ? "on" : ""}">Nyast</button><button type="button" data-isort="gillad" class="${iSort === "gillad" ? "on" : ""}">Mest gillad</button></div></div>
+        <div class="seg" role="group" aria-label="Ordning"><button type="button" data-isort="ny" class="${iSort === "ny" ? "on" : ""}">Nyast</button><button type="button" data-isort="gillad" class="${iSort === "gillad" ? "on" : ""}">Mest gillad</button></div>
+        <button type="button" data-iplanvis aria-pressed="${iPlanVis}">${iPlanVis ? "Dölj plan" : "Visa plan"}</button></div>
+      ${iPlanVis ? inspPlan() : ""}
       ${mobWrite ? `<p class="ghint">Kopiera en bild (på Pinterest: högerklicka på bilden och välj Kopiera bild) och klistra in här med Ctrl+V. Den hamnar i ${esc(dit)}.</p>` : ""}
       <div class="igrid">${list.map(b => {
         const [u, d] = tumSumma(b), mine = (b.tummar || {})[me] || 0;
@@ -2158,6 +2195,9 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   });
   $("insp").addEventListener("click", e => {
     const s = e.target.closest("[data-isort]"); if (s) { iSort = s.dataset.isort; store.set("inspSort", iSort); renderInsp(); return; }
+    if (e.target.closest("[data-iplanvis]")) { iPlanVis = !iPlanVis; store.set("inspPlan", iPlanVis ? "1" : "0"); renderInsp(); return; }
+    const fl = e.target.closest("[data-ifloor]"); if (fl) { iFloor = fl.dataset.ifloor; store.set("inspFloor", iFloor); if (iRum && iRum !== OSORT) iRum = ""; store.set("inspRum", iRum); renderInsp(); syncUrl(); return; }
+    const pr = e.target.closest("[data-iplanrum]"); if (pr) { iRum = pr.dataset.iplanrum === iRum ? "" : pr.dataset.iplanrum; store.set("inspRum", iRum); renderInsp(); syncUrl(); return; }
     const card = e.target.closest("[data-insp]"), b = card && insp.find(x => x.id === card.dataset.insp); if (!b) return;
     const t = e.target.closest("[data-tum]"); if (t) { if (mobWrite) tumma(b, +t.dataset.tum); return; }
     openInsp(b.id);
@@ -2165,6 +2205,8 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   $("insp").addEventListener("keydown", e => {
     const c = e.target.closest?.("[data-insp]");
     if (c && e.target === c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openInsp(c.dataset.insp); }
+    const pr = e.target.closest?.("[data-iplanrum]");
+    if (pr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pr.dispatchEvent(new MouseEvent("click", { bubbles: true })); }
   });
   const iSteg = d => {
     const list = iLista(), i = list.findIndex(x => x.id === iOpen), nx = list[(i + d + list.length) % list.length];
