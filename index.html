@@ -2314,21 +2314,23 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   // ---------- bilder: originalplanen, rum att klicka på och en bildvisare ----------
   const nb = i => ({ src: `bilder/notar/notar-${String(i).padStart(2, "0")}.webp`, cap: "Mäklarens bild" });
   const eb = t => ({ src: `bilder/egna/egen-${t}.jpg`, cap: `Egen bild, kl. ${t.slice(0, 2)}.${t.slice(2, 4)}` });
+  const kb = n => ({ src: `bilder/egna/kvall-${String(n).padStart(2, "0")}.jpg`, cap: "Egen bild, kvällstid" });
   const BILDER = {                                            // rumsnamn som i planen
     // undervåning
     Hall: [nb(21), nb(22), eb("121541100"), eb("121546458"), eb("125000677"), eb("125821027")],
+    Garderob1: [kb(4)],                                       // klädkammaren från hallen
     MasterBedroom: [nb(11), nb(12), eb("122529429"), eb("122534389")],
     Sovrum1: [nb(14), eb("122558146"), eb("125809564"), eb("125814376")],
     Sovrum2: [nb(13), eb("125732991"), eb("125736452")],
     Matsal: [nb(3), nb(8), eb("125845672")],
-    Kök: [nb(7), nb(9), nb(10), eb("125838416")],
-    WC1: [nb(19), eb("122228752"), eb("124932083"), eb("124947067"), eb("130002797")],   // rosa bård, fönster, duschdraperi
+    Kök: [nb(7), nb(9), nb(10), eb("125838416"), kb(1), kb(8)],      // kb(8): genom öppningen mot matsalen
+    WC1: [nb(19), eb("122228752"), eb("124932083"), eb("124947067"), eb("130002797"), kb(2), kb(3)],   // rosa bård; kb(2) från hallen, fönster, duschdraperi
     WC2: [nb(20), eb("125751891"), eb("125755076")],          // blå bård
     Balkong: [nb(4), nb(6), nb(26), nb(27)],
     // ovanvåning
-    Vardagsrum: [nb(1), nb(2), eb("124242060"), eb("123224544"), eb("123232655"), eb("122756151"), eb("122801241"), eb("123236180"), eb("124346530")],
+    Vardagsrum: [nb(1), nb(2), eb("124242060"), eb("123224544"), eb("123232655"), eb("122756151"), eb("122801241"), eb("123236180"), eb("124346530"), kb(7)],
     Sovrum4: [nb(17), nb(18), eb("123804498"), eb("123809516"), eb("123814954")],
-    Badrum: [nb(15), nb(16), eb("123927798"), eb("124030169")],
+    Badrum: [nb(15), nb(16), eb("123927798"), eb("124030169"), kb(5), kb(6)],
   };
   const EXTRA = {
     Utsida: [nb(5), nb(23), nb(24)],
