@@ -1850,7 +1850,12 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   // ---------- att göra: en tavla med lappar, delad i databasen (samlingen lappar) ----------
   // lapp = { rubrik, emoji, kolumn, ordning, vikt, bradska, deadline, agare, rum: [], etiketter: [], beskrivning,
   //          skapad, skapadAv, andrad, andradAv }. Allt utom rubrik är frivilligt.
-  const KOLUMNER = [["att-gora", "Att göra"], ["pagar", "Pågår"], ["vantar", "Väntar"], ["klart", "Klart"]];
+  const KOLUMNER = [["att-gora", "Att göra"], ["pagar", "Pågår"], ["klart", "Klart"]];
+  // Ordningen på tavlan delas av alla (installningar/todo): "" = egen ordning, "bradska" eller "vikt" = högst nivå överst.
+  // Inom samma nivå gäller den egna ordningen (fältet ordning). Lappar utan nivå hamnar sist.
+  const ORDNINGAR = [["", "Egen ordning"], ["bradska", "Högst brådska överst"], ["vikt", "Viktigast överst"]];
+  let tOrd = "", flyttarVantar = false;
+  const rang = l => tOrd ? ({ hog: 0, medel: 1, lag: 2 }[l[tOrd]] ?? 3) : 0;
   const NIVA = [["hog", "Hög"], ["medel", "Medel"], ["lag", "Låg"]];
   const EMOJIS = ["🔨", "🪚", "🎨", "🚿", "🚽", "🛁", "⚡", "💡", "🧱", "🪟", "🚪", "🛏️", "🍳", "📞", "📝", "💰", "📦", "🧹", "✅", "❗"];
   let lappar = [], personer = [], lappOpen = null, descEdit = false, dragId = null;
@@ -1864,7 +1869,8 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   const allaRum = () => [...new Set([...mobRooms().values()].flatMap(s => [...s]))].sort((a, b) => a.localeCompare(b, "sv"));
   const allaEtiketter = () => [...new Set(lappar.flatMap(l => l.etiketter || []))].sort((a, b) => a.localeCompare(b, "sv"));
   const syns = l => (!tf.rum || (l.rum || []).includes(tf.rum)) && (!tf.agare || l.agare === tf.agare) && (!tf.etikett || (l.etiketter || []).includes(tf.etikett));
-  const iKolumn = k => lappar.filter(l => (l.kolumn || "att-gora") === k).sort((a, b) => (a.ordning ?? 0) - (b.ordning ?? 0));
+  const kolAv = l => KOLUMNER.some(c => c[0] === l.kolumn) ? l.kolumn : "att-gora";   // okänd kolumn (t.ex. gamla Väntar) visas i Att göra
+  const iKolumn = k => lappar.filter(l => kolAv(l) === k).sort((a, b) => rang(a) - rang(b) || (a.ordning ?? 0) - (b.ordning ?? 0));
 
   function lappHtml(l) {
     const meta = [];
@@ -1875,7 +1881,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
       meta.push(`<span class="tpill${late ? " sen" : soon ? " snart" : ""}" title="Deadline">📅 ${esc(new Date(l.deadline + "T12:00").toLocaleDateString("sv-SE", { day: "numeric", month: "short" }))}</span>`);
     }
     const tags = [...(l.rum || []).map(r => chip(r, "rum")), ...(l.etiketter || []).map(e => chip(e))].join("");
-    return `<article class="lapp" data-lapp="${esc(l.id)}" tabindex="0">
+    return `<article class="lapp" data-lapp="${esc(l.id)}" data-rang="${rang(l)}" tabindex="0">
       <div class="lrub">${l.emoji ? `<span class="lemoji">${esc(l.emoji)}</span>` : ""}<b>${esc(l.rubrik)}</b>${l.agare ? `<span class="lagare" title="${esc(l.agare)}">${esc(namnAv(l.agare))}</span>` : ""}</div>
       ${meta.length ? `<div class="lmeta">${meta.join("")}</div>` : ""}${tags ? `<div class="ltags">${tags}</div>` : ""}
       ${l.beskrivning ? `<span class="lhar" title="Har beskrivning">≡</span>` : ""}</article>`;
@@ -1893,7 +1899,9 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   function renderTodoSide() {
     const opt = (v, t, cur) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(t)}</option>`;
     const sel = (k, namn, vals) => `<label class="tfilter">${namn}<select data-tf="${k}">${opt("", "Alla", tf[k])}${vals.map(([v, t]) => opt(v, t, tf[k])).join("")}</select></label>`;
-    $("todoSide").innerHTML = `<h2>Filter</h2>
+    $("todoSide").innerHTML = `<h2>Ordning</h2>
+      <label class="tfilter">Visa<select data-tord${mobWrite ? "" : " disabled"}>${ORDNINGAR.map(([v, t]) => opt(v, t, tOrd)).join("")}</select></label>
+      <h2>Filter</h2>
       ${sel("rum", "Rum", allaRum().map(r => [r, r]))}
       ${sel("agare", "Ägare", personer.map(p => [p, namnAv(p)]))}
       ${sel("etikett", "Etikett", allaEtiketter().map(e => [e, e]))}
@@ -1916,7 +1924,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
         <input class="drub" data-f="rubrik" value="${esc(l.rubrik)}" aria-label="Rubrik" required${ro}>
         <button value="stang" aria-label="Stäng">✕</button></form>
       <div class="dgrid">
-        <label>Kolumn<select data-f="kolumn"${ro}>${KOLUMNER.map(([v, t]) => opt(v, t, l.kolumn || "att-gora")).join("")}</select></label>
+        <label>Kolumn<select data-f="kolumn"${ro}>${KOLUMNER.map(([v, t]) => opt(v, t, kolAv(l))).join("")}</select></label>
         ${nivaSel("vikt", "Vikt")}${nivaSel("bradska", "Brådska")}
         <label>Deadline<input type="date" data-f="deadline" value="${esc(l.deadline || "")}"${ro}></label>
         <label>Ägare<select data-f="agare"${ro}>${opt("", "–", l.agare)}${personer.map(p => opt(p, namnAv(p), l.agare)).join("")}</select></label>
@@ -1986,7 +1994,7 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   // dra med mus direkt, med finger efter ett kort tryck (annars skrollar tavlan)
   let pd = null, justDragged = false;
   const dropIndex = (list, y) => {
-    const cards = [...list.querySelectorAll(".lapp:not(.drar)")];
+    const cards = [...list.querySelectorAll(".lapp:not(.drar)")].filter(c => c !== pd.card && (!tOrd || c.dataset.rang === pd.card.dataset.rang));
     const i = cards.findIndex(c => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
     return [cards, i < 0 ? cards.length : i];
   };
@@ -2002,7 +2010,9 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
     clearMarks(); pd.list = document.elementFromPoint(x, y)?.closest(".kol")?.querySelector(".klist") || null;   // hela kolumnen tar emot
     if (!pd.list) return;
     const [cards, i] = dropIndex(pd.list, y), mark = document.createElement("div"); mark.className = "dropmark";
-    if (i < cards.length) pd.list.insertBefore(mark, cards[i]); else pd.list.appendChild(mark);
+    const lagre = [...pd.list.querySelectorAll(".lapp:not(.drar)")].find(c => +c.dataset.rang > +pd.card.dataset.rang);   // första lappen med lägre nivå
+    const ref = i < cards.length ? cards[i] : cards.length ? cards[cards.length - 1].nextElementSibling : lagre;
+    pd.list.insertBefore(mark, ref || null);
   }
   function endDrag(drop, y) {
     if (pd.timer) clearTimeout(pd.timer);
@@ -2038,15 +2048,30 @@ if (typeof module !== "undefined") module.exports = { parsePlan, activeSet, comp
   document.addEventListener("pointerup", e => { if (pd && e.pointerId === pd.pid) endDrag(true, e.clientY); });
   document.addEventListener("pointercancel", e => { if (pd && e.pointerId === pd.pid) endDrag(false); });
   $("board").addEventListener("touchmove", e => { if (pd && pd.drag) e.preventDefault(); }, { passive: false });
+  $("todoSide").addEventListener("change", e => {
+    if (e.target.hasAttribute("data-tord")) {
+      tOrd = e.target.value; renderBoard();
+      window.v23todoDb.ordning(tOrd).catch(err => { console.error(err); toast("Kunde inte spara ordningen."); });
+    }
+  });
   $("todoSide").addEventListener("change", e => { const k = e.target.dataset.tf; if (!k) return; tf[k] = e.target.value; store.set("todoFilter", tf); renderBoard(); });
   $("todoSide").addEventListener("click", e => { if (e.target.id === "tfClear") { tf = { rum: "", agare: "", etikett: "" }; store.set("todoFilter", tf); renderBoard(); } });
 
   window.v23todo = {                                   // används av kontodelen
     set(list) {
       lappar = list; renderBoard();
+      // kolumnen Väntar finns inte längre: flytta dess lappar sist i Att göra, i samma inbördes ordning (görs en gång, av den som får skriva)
+      const gamla = lappar.filter(l => l.kolumn === "vantar").sort((a, b) => (a.ordning ?? 0) - (b.ordning ?? 0));
+      if (mobWrite && gamla.length && !flyttarVantar) {
+        flyttarVantar = true;
+        const max = Math.max(0, ...lappar.filter(l => l.kolumn === "att-gora" || !l.kolumn).map(l => l.ordning ?? 0));
+        Promise.all(gamla.map((l, i) => window.v23todoDb.update(l.id, { kolumn: "att-gora", ordning: max + 1000 * (i + 1) })))
+          .catch(err => console.error(err)).finally(() => { flyttarVantar = false; });
+      }
       if (lappOpen) { const a = document.activeElement; if (!descEdit && !(a && $("lappDlg").contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) renderDlg(); }
     },
     people(list) { personer = list; renderBoard(); },
+    ordning(v) { tOrd = ORDNINGAR.some(o => o[0] === v) ? v : ""; renderBoard(); },
   };
 
   // ---------- Inspiration: egna bilder per rum, inklistrade och krympta i webbläsaren ----------
@@ -2699,11 +2724,14 @@ function followKalkyl(roll) {
 }
 // ---------- Att göra i databasen: samlingen lappar; ägare väljs bland dem som får skriva ----------
 const lappCol = collection(db, "lappar");
-let unsubLappar = null;
+const todoInst = doc(db, "installningar", "todo");          // { ordning: "" | "bradska" | "vikt" }, delas av alla
+let unsubLappar = null, unsubTodoInst = null;
 async function followLappar(user, roll) {
   if (unsubLappar) { unsubLappar(); unsubLappar = null; }
-  window.v23todo.set([]);
+  if (unsubTodoInst) { unsubTodoInst(); unsubTodoInst = null; }
+  window.v23todo.set([]); window.v23todo.ordning("");
   if (!roll || roll === "ingen") { window.v23todo.people([]); return; }
+  unsubTodoInst = onSnapshot(todoInst, snap => window.v23todo.ordning(snap.data()?.ordning || ""), err => console.error(err));
   unsubLappar = onSnapshot(lappCol, snap => window.v23todo.set(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.error(err));
   try {
     const r = (await getDoc(doc(db, "config", "roller"))).data() || {};
@@ -2714,6 +2742,7 @@ window.v23todoDb = {
   add: data => addDoc(lappCol, { ...data, skapadAv: auth.currentUser.email, skapad: serverTimestamp() }),
   update: (id, patch) => setDoc(doc(lappCol, id), { ...patch, andradAv: auth.currentUser.email, andrad: serverTimestamp() }, { merge: true }),
   remove: id => deleteDoc(doc(lappCol, id)),
+  ordning: v => setDoc(todoInst, { ordning: v, av: auth.currentUser.email, uppdaterad: serverTimestamp() }, { merge: true }),
 };
 
 // ---------- Inspiration: samlingen inspiration (liten bild och uppgifter) och inspirationBild/<samma id> (stor bild) ----------
